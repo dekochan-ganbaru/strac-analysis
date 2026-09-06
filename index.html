@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>STRAC経営分析 Prototype 01-3</title>
+<title>STRAC経営分析 Prototype 01-3.1</title>
 <style>
   :root{
     --bg:#f4f6f8;
@@ -491,8 +491,8 @@
 
   <header>
     <div>
-      <h1>STRAC経営分析 Prototype 01-3</h1>
-      <div class="subtitle">赤字時は「未回収固定費」を図外に分離し、利益構造をより正確に表示します。</div>
+      <h1>STRAC経営分析 Prototype 01-3.1</h1>
+      <div class="subtitle">赤字時は利益ブロックを完全非表示にし、「未回収固定費＝営業損失」だけを図外に表示します。</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="save-status" id="runtimeStatus">JavaScript確認中</div><div class="save-status" id="saveStatus">保存機能確認中</div></div>
   </header>
@@ -902,6 +902,8 @@ function update(){
   if(isLoss){
     el('fixedBlock').innerHTML = `その他固定費<br>回収分 ${formatJapanese(recoveredOtherFixed)}<small>${sales>0?pct(recoveredOtherFixed/sales):'—'}</small>`;
     el('profitBlock').classList.add('hidden');
+    el('profitBlock').style.display = 'none';
+    el('profitBlock').style.flex = '0 0 0';
     el('unrecoveredWrapper').classList.remove('hidden');
     el('unrecoveredValue').textContent = `▲${formatJapanese(unrecoveredFixed)}`;
     el('unrecoveredRate').textContent = sales>0 ? `-${(unrecoveredFixed/sales*100).toFixed(1)}%` : '—';
@@ -910,6 +912,8 @@ function update(){
   }else{
     el('fixedBlock').innerHTML = `その他固定費<br>${formatJapanese(otherFixed)}<small>${sales>0?pct(otherFixed/sales):'—'}</small>`;
     el('profitBlock').classList.remove('hidden');
+    el('profitBlock').style.display = 'flex';
+    el('profitBlock').style.flex = `${profitFlex} 1 0`;
     el('profitBlock').classList.remove('loss-seg');
     el('profitBlock').classList.add('profit-seg');
     el('profitBlock').innerHTML = `利益<br>${formatJapanese(profit)}<small>${pct(profitRate)}</small>`;
