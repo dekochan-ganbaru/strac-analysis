@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>STRAC経営分析 Prototype 02</title>
+<title>STRAC経営分析 Prototype 02-1</title>
 <style>
   :root{
     --bg:#f4f6f8;
@@ -462,6 +462,125 @@
   .scale-marker-label.sales{color:#1d4ed8}.scale-marker-label.break{color:#b91c1c}
   .bar-message{margin-top:8px;font-weight:900;font-size:13px}.bar-message.good{color:#166534}.bar-message.bad{color:#b91c1c}
 
+
+  .sim-panel{
+    margin-top:14px;
+    padding:16px;
+  }
+  .sim-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .sim-title{
+    margin:0;
+    font-size:22px;
+  }
+  .sim-badge{
+    display:inline-block;
+    margin-top:7px;
+    padding:6px 10px;
+    border-radius:999px;
+    background:#eef2ff;
+    color:#3730a3;
+    font-size:12px;
+    font-weight:900;
+  }
+  .sim-grid{
+    display:grid;
+    grid-template-columns:minmax(320px,430px) 1fr;
+    gap:14px;
+  }
+  .sim-card{
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:15px;
+    background:#fff;
+  }
+  .sim-card h3{
+    margin:0 0 14px;
+    font-size:17px;
+  }
+  .sim-row{
+    margin-bottom:18px;
+  }
+  .sim-row:last-child{
+    margin-bottom:0;
+  }
+  .sim-row-top{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    align-items:center;
+    margin-bottom:7px;
+  }
+  .sim-row-name{
+    font-size:13px;
+    font-weight:900;
+  }
+  .sim-row-value{
+    font-size:16px;
+    font-weight:900;
+  }
+  input[type="range"]{
+    width:100%;
+    padding:0;
+    border:0;
+  }
+  .sim-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .sim-kpis{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .sim-kpi{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px;
+    background:#f8fafc;
+  }
+  .sim-kpi .k{
+    color:var(--muted);
+    font-size:12px;
+    font-weight:800;
+  }
+  .sim-kpi .v{
+    margin-top:5px;
+    font-size:20px;
+    font-weight:900;
+  }
+  .compare-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:6px;
+  }
+  .compare-table th,.compare-table td{
+    padding:10px 7px;
+    border-bottom:1px solid var(--line);
+    text-align:right;
+    white-space:nowrap;
+  }
+  .compare-table th:first-child,.compare-table td:first-child{
+    text-align:left;
+  }
+  .compare-table th{
+    color:var(--muted);
+    font-size:12px;
+  }
+  .delta-plus{color:#15803d;font-weight:900}
+  .delta-minus{color:#b91c1c;font-weight:900}
+  .sim-comment{
+    margin-top:12px;
+  }
+
   @media (max-width:980px){
     header{grid-template-columns:1fr}
     .top-meta{grid-template-columns:1fr 1fr}
@@ -469,6 +588,8 @@
     .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     .main-grid{grid-template-columns:1fr}
     .input-panel{position:static}
+    .sim-grid{grid-template-columns:1fr}
+    .sim-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
   }
 
   @media (max-width:620px){
@@ -477,6 +598,7 @@
     .top-meta .field:last-child{grid-column:auto}
     .kpi-grid{grid-template-columns:1fr}
     .metrics-grid{grid-template-columns:1fr}
+    .sim-kpis{grid-template-columns:1fr}
     .button-row{grid-template-columns:1fr}
     .equation{grid-template-columns:1fr}
     .eq-op{transform:rotate(90deg)}
@@ -491,8 +613,8 @@
 
   <header>
     <div>
-      <h1>STRAC経営分析 Prototype 02</h1>
-      <div class="subtitle">現在値を基準に、売上高・変動費率・人件費・その他固定費を動かして将来の利益構造を試せます。</div>
+      <h1>STRAC経営分析 Prototype 02-1</h1>
+      <div class="subtitle">現在値を残したまま、売上・変動費率・人件費・固定費を動かして将来の利益を試算できます。</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="save-status" id="runtimeStatus">JavaScript確認中</div><div class="save-status" id="saveStatus">保存機能確認中</div></div>
   </header>
@@ -700,10 +822,93 @@
       </section>
     </div>
   </section>
+
+
+  <section class="panel sim-panel" id="simulatorSection">
+    <div class="sim-head">
+      <div>
+        <h2 class="sim-title">もしも経営シミュレーター</h2>
+        <div class="subtitle">現在値は変更せず、条件だけを動かして結果を比較します。</div>
+        <span class="sim-badge">Prototype 02-1 シミュレーター表示中</span>
+      </div>
+      <div class="sim-actions">
+        <button class="btn-primary" id="simResetBtn">現在値に戻す</button>
+        <button class="btn-danger" id="simRedTestBtn">赤字テスト</button>
+      </div>
+    </div>
+
+    <div class="sim-grid">
+      <div class="sim-card">
+        <h3>シミュレーション条件</h3>
+
+        <div class="sim-row">
+          <div class="sim-row-top">
+            <span class="sim-row-name">売上高</span>
+            <span class="sim-row-value" id="simSalesLabel"></span>
+          </div>
+          <input type="range" id="simSalesPct" min="50" max="150" step="1" value="100">
+          <div class="helper">現在売上高の50〜150%</div>
+        </div>
+
+        <div class="sim-row">
+          <div class="sim-row-top">
+            <span class="sim-row-name">変動費率</span>
+            <span class="sim-row-value" id="simVariableRateLabel"></span>
+          </div>
+          <input type="range" id="simVariableRate" min="0" max="100" step="0.1" value="60">
+          <div class="helper">売上高に対する変動費の割合</div>
+        </div>
+
+        <div class="sim-row">
+          <div class="sim-row-top">
+            <span class="sim-row-name">人件費</span>
+            <span class="sim-row-value" id="simLaborPctLabel"></span>
+          </div>
+          <input type="range" id="simLaborPct" min="50" max="150" step="1" value="100">
+          <div class="helper">現在人件費の50〜150%</div>
+        </div>
+
+        <div class="sim-row">
+          <div class="sim-row-top">
+            <span class="sim-row-name">その他固定費</span>
+            <span class="sim-row-value" id="simOtherPctLabel"></span>
+          </div>
+          <input type="range" id="simOtherPct" min="50" max="150" step="1" value="100">
+          <div class="helper">現在のその他固定費の50〜150%</div>
+        </div>
+      </div>
+
+      <div class="sim-card">
+        <h3>現在値との比較</h3>
+
+        <div class="sim-kpis">
+          <div class="sim-kpi"><div class="k">シミュレーション営業利益</div><div class="v" id="simProfit"></div></div>
+          <div class="sim-kpi"><div class="k">現在利益との差</div><div class="v" id="simProfitDelta"></div></div>
+          <div class="sim-kpi"><div class="k">損益分岐点売上高</div><div class="v" id="simBreakEven"></div></div>
+          <div class="sim-kpi"><div class="k">安全余裕率</div><div class="v" id="simSafetyRate"></div></div>
+        </div>
+
+        <table class="compare-table">
+          <thead>
+            <tr><th>項目</th><th>現在</th><th>もしも</th><th>差</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>売上高</td><td id="cmpSalesNow"></td><td id="cmpSalesSim"></td><td id="cmpSalesDiff"></td></tr>
+            <tr><td>変動費</td><td id="cmpVariableNow"></td><td id="cmpVariableSim"></td><td id="cmpVariableDiff"></td></tr>
+            <tr><td>限界利益</td><td id="cmpMarginalNow"></td><td id="cmpMarginalSim"></td><td id="cmpMarginalDiff"></td></tr>
+            <tr><td>固定費</td><td id="cmpFixedNow"></td><td id="cmpFixedSim"></td><td id="cmpFixedDiff"></td></tr>
+            <tr><td>営業利益</td><td id="cmpProfitNow"></td><td id="cmpProfitSim"></td><td id="cmpProfitDiff"></td></tr>
+          </tbody>
+        </table>
+
+        <div class="note sim-comment" id="simComment"></div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <script>
-const STORAGE_KEY = 'strac-prototype-01-3-v1';
+const STORAGE_KEY = 'strac-prototype-02-1-v1';
 
 const el = id => document.getElementById(id);
 
@@ -1029,11 +1234,134 @@ el('clearBtn').addEventListener('click',()=>{
   setSaving();
 });
 
+
+function getCurrentValues(){
+  return {
+    sales: parseJapaneseMoney(el('sales').value),
+    variable: parseJapaneseMoney(el('variableCost').value),
+    labor: parseJapaneseMoney(el('laborCost').value),
+    otherFixed: parseJapaneseMoney(el('otherFixed').value)
+  };
+}
+
+function formatSignedDelta(n){
+  if(Math.abs(n) < 0.5) return '±0円';
+  const sign = n > 0 ? '+' : '▲';
+  return `${sign}${formatJapanese(Math.abs(n))}`;
+}
+
+function setDeltaCell(id,n){
+  const node=el(id);
+  node.textContent=formatSignedDelta(n);
+  node.classList.remove('delta-plus','delta-minus');
+  if(n>0) node.classList.add('delta-plus');
+  if(n<0) node.classList.add('delta-minus');
+}
+
+function resetSimulation(){
+  const base=getCurrentValues();
+  el('simSalesPct').value='100';
+  el('simVariableRate').value=base.sales>0 ? String(Math.max(0,Math.min(100,(base.variable/base.sales)*100))) : '0';
+  el('simLaborPct').value='100';
+  el('simOtherPct').value='100';
+  updateSimulation();
+}
+
+function updateSimulation(){
+  try{
+    const base=getCurrentValues();
+
+    const salesRatio=Number(el('simSalesPct').value)/100;
+    const variableRate=Number(el('simVariableRate').value)/100;
+    const laborRatio=Number(el('simLaborPct').value)/100;
+    const otherRatio=Number(el('simOtherPct').value)/100;
+
+    const simSales=base.sales*salesRatio;
+    const simVariable=simSales*variableRate;
+    const simLabor=base.labor*laborRatio;
+    const simOtherFixed=base.otherFixed*otherRatio;
+    const simMarginal=simSales-simVariable;
+    const simFixed=simLabor+simOtherFixed;
+    const simProfit=simMarginal-simFixed;
+
+    const baseMarginal=base.sales-base.variable;
+    const baseFixed=base.labor+base.otherFixed;
+    const baseProfit=baseMarginal-baseFixed;
+
+    const simMarginalRate=simSales>0 ? simMarginal/simSales : NaN;
+    const simBreakEven=simMarginalRate>0 ? simFixed/simMarginalRate : NaN;
+    const simSafetyRate=simSales>0 && Number.isFinite(simBreakEven)
+      ? (simSales-simBreakEven)/simSales : NaN;
+
+    el('simSalesLabel').textContent=`${unitFormat(simSales)}（${Math.round(salesRatio*100)}%）`;
+    el('simVariableRateLabel').textContent=`${(variableRate*100).toFixed(1)}%`;
+    el('simLaborPctLabel').textContent=`${unitFormat(simLabor)}（${Math.round(laborRatio*100)}%）`;
+    el('simOtherPctLabel').textContent=`${unitFormat(simOtherFixed)}（${Math.round(otherRatio*100)}%）`;
+
+    el('simProfit').textContent=simProfit<0 ? `▲${formatJapanese(Math.abs(simProfit))}` : formatJapanese(simProfit);
+    el('simProfit').style.color=simProfit<0 ? '#b91c1c' : '#15803d';
+
+    setDeltaCell('simProfitDelta',simProfit-baseProfit);
+    el('simBreakEven').textContent=Number.isFinite(simBreakEven) ? formatJapanese(simBreakEven) : '—';
+    el('simSafetyRate').textContent=pct(simSafetyRate);
+
+    el('cmpSalesNow').textContent=formatJapanese(base.sales);
+    el('cmpSalesSim').textContent=formatJapanese(simSales);
+    setDeltaCell('cmpSalesDiff',simSales-base.sales);
+
+    el('cmpVariableNow').textContent=formatJapanese(base.variable);
+    el('cmpVariableSim').textContent=formatJapanese(simVariable);
+    setDeltaCell('cmpVariableDiff',simVariable-base.variable);
+
+    el('cmpMarginalNow').textContent=formatJapanese(baseMarginal);
+    el('cmpMarginalSim').textContent=formatJapanese(simMarginal);
+    setDeltaCell('cmpMarginalDiff',simMarginal-baseMarginal);
+
+    el('cmpFixedNow').textContent=formatJapanese(baseFixed);
+    el('cmpFixedSim').textContent=formatJapanese(simFixed);
+    setDeltaCell('cmpFixedDiff',simFixed-baseFixed);
+
+    el('cmpProfitNow').textContent=baseProfit<0 ? `▲${formatJapanese(Math.abs(baseProfit))}` : formatJapanese(baseProfit);
+    el('cmpProfitSim').textContent=simProfit<0 ? `▲${formatJapanese(Math.abs(simProfit))}` : formatJapanese(simProfit);
+    setDeltaCell('cmpProfitDiff',simProfit-baseProfit);
+
+    const note=el('simComment');
+    if(simProfit>=0){
+      note.classList.remove('bad');
+      const diff=simProfit-baseProfit;
+      note.textContent=`この条件では営業利益 ${formatJapanese(simProfit)}。現在と比べて ${formatJapanese(Math.abs(diff))} ${diff>=0?'改善':'悪化'}します。`;
+    }else{
+      note.classList.add('bad');
+      note.textContent=`この条件では営業損失 ${formatJapanese(Math.abs(simProfit))}。${Number.isFinite(simBreakEven)?`損益分岐点売上高は ${formatJapanese(simBreakEven)} です。`:'限界利益率が0以下のため損益分岐点を算出できません。'}`;
+    }
+  }catch(err){
+    const note=el('simComment');
+    if(note){
+      note.classList.add('bad');
+      note.textContent='シミュレーターの計算でエラーが発生しました。ページを再読み込みしてください。';
+    }
+    console.error(err);
+  }
+}
+
+['simSalesPct','simVariableRate','simLaborPct','simOtherPct'].forEach(id=>{
+  el(id).addEventListener('input',updateSimulation);
+});
+el('simResetBtn').addEventListener('click',resetSimulation);
+el('simRedTestBtn').addEventListener('click',()=>{
+  el('simSalesPct').value='90';
+  el('simVariableRate').value='66.7';
+  el('simLaborPct').value='100';
+  el('simOtherPct').value='100';
+  updateSimulation();
+});
+
 el('runtimeStatus').textContent = '✓ JavaScript動作中';
 el('runtimeStatus').style.background = '#dcfce7';
 el('runtimeStatus').style.color = '#166534';
 loadState();
 update();
+resetSimulation();
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));}
 </script>
 </body>
