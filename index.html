@@ -3,1366 +3,492 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>STRAC経営分析 Prototype 02-1</title>
+<meta name="theme-color" content="#1d4ed8" />
+<link rel="manifest" href="manifest.webmanifest" />
+<title>STRAC経営分析 Prototype 02-2</title>
 <style>
-  :root{
-    --bg:#f4f6f8;
-    --panel:#ffffff;
-    --text:#172033;
-    --muted:#6b7280;
-    --line:#d7dce3;
-    --blue:#1d4ed8;
-    --blue-soft:#dbeafe;
-    --cyan:#e0f2fe;
-    --gray:#e5e7eb;
-    --yellow:#fef3c7;
-    --orange:#fed7aa;
-    --green:#dcfce7;
-    --green-strong:#15803d;
-    --red:#fee2e2;
-    --red-strong:#b91c1c;
-    --shadow:0 10px 28px rgba(15,23,42,.07);
-  }
-
-  *{box-sizing:border-box}
-  body{
-    margin:0;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
-    background:var(--bg);
-    color:var(--text);
-  }
-
-  .app{
-    max-width:1480px;
-    margin:0 auto;
-    padding:18px;
-  }
-
-  header{
-    display:grid;
-    grid-template-columns:1fr auto;
-    gap:16px;
-    align-items:end;
-    margin-bottom:14px;
-  }
-
-  h1{
-    margin:0;
-    font-size:clamp(24px,3vw,38px);
-    letter-spacing:.01em;
-  }
-
-  .subtitle{
-    margin-top:6px;
-    color:var(--muted);
-    font-size:14px;
-  }
-
-  .save-status{
-    font-weight:800;
-    font-size:14px;
-    padding:9px 12px;
-    border-radius:999px;
-    background:#eef2ff;
-    color:#3730a3;
-    white-space:nowrap;
-  }
-
-  .panel{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:18px;
-    box-shadow:var(--shadow);
-  }
-
-  .top-meta{
-    display:grid;
-    grid-template-columns:1fr 1fr auto;
-    gap:12px;
-    padding:14px;
-    margin-bottom:14px;
-  }
-
-  .field label{
-    display:block;
-    font-weight:800;
-    font-size:13px;
-    margin-bottom:6px;
-    color:#374151;
-  }
-
-  input, select{
-    width:100%;
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:12px 14px;
-    font-size:16px;
-    background:#fff;
-    color:var(--text);
-  }
-
-  input:focus, select:focus{
-    outline:3px solid rgba(29,78,216,.12);
-    border-color:var(--blue);
-  }
-
-  .kpi-grid{
-    display:grid;
-    grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:12px;
-    margin-bottom:14px;
-  }
-
-  .kpi{
-    padding:16px;
-    border:1px solid var(--line);
-    border-radius:18px;
-    background:#fff;
-    box-shadow:var(--shadow);
-  }
-
-  .kpi .label{
-    font-size:13px;
-    color:var(--muted);
-    font-weight:800;
-    margin-bottom:8px;
-  }
-
-  .kpi .main{
-    font-weight:900;
-    font-size:clamp(24px,2.6vw,38px);
-    line-height:1.05;
-  }
-
-  .kpi .sub{
-    margin-top:6px;
-    font-size:14px;
-    color:var(--muted);
-    font-weight:700;
-  }
-
-  .kpi.profit{border-color:#bbf7d0}
-  .kpi.loss{border-color:#fecaca}
-
-  .main-grid{
-    display:grid;
-    grid-template-columns:minmax(300px,390px) 1fr;
-    gap:14px;
-    align-items:start;
-  }
-
-  .input-panel{
-    padding:16px;
-    position:sticky;
-    top:12px;
-  }
-
-  .input-panel h2,.chart-panel h2,.metrics-panel h2{
-    margin:0 0 12px;
-    font-size:19px;
-  }
-
-  .money-row{
-    margin-bottom:14px;
-  }
-
-  .money-row .helper{
-    margin-top:5px;
-    font-size:13px;
-    color:var(--muted);
-  }
-
-  .button-row{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-    margin-top:14px;
-  }
-
-  button{
-    border:0;
-    border-radius:12px;
-    padding:12px 14px;
-    font-size:15px;
-    font-weight:900;
-    cursor:pointer;
-  }
-
-  .btn-primary{background:var(--blue); color:#fff}
-  .btn-secondary{background:#e5e7eb; color:#111827}
-  .btn-danger{background:#fff1f2; color:#be123c; border:1px solid #fecdd3}
-
-  .chart-panel{
-    padding:16px;
-  }
-
-  .chart-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    margin-bottom:12px;
-    flex-wrap:wrap;
-  }
-
-  .status-chip{
-    font-weight:900;
-    font-size:13px;
-    padding:7px 10px;
-    border-radius:999px;
-  }
-
-  .status-chip.good{background:var(--green);color:#166534}
-  .status-chip.bad{background:var(--red);color:#991b1b}
-
-  .sales-banner{
-    background:linear-gradient(135deg,#1e3a8a,#2563eb);
-    color:#fff;
-    border-radius:14px;
-    padding:14px 16px;
-    margin-bottom:10px;
-    display:flex;
-    align-items:end;
-    justify-content:space-between;
-    gap:12px;
-    flex-wrap:wrap;
-  }
-
-  .sales-banner .name{
-    font-size:13px;
-    font-weight:900;
-    opacity:.9;
-  }
-
-  .sales-banner .value{
-    font-size:clamp(24px,3vw,40px);
-    font-weight:900;
-    line-height:1;
-  }
-
-  .sales-banner .sub{
-    font-size:13px;
-    opacity:.9;
-    margin-top:4px;
-  }
-
-  .strac{
-    min-height:390px;
-    border:2px solid #111827;
-    border-radius:14px;
-    overflow:hidden;
-    display:flex;
-    background:#fff;
-  }
-
-  .block{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    padding:10px;
-    font-weight:900;
-    min-width:0;
-  }
-
-  .variable{
-    background:var(--gray);
-    border-right:2px solid #111827;
-  }
-
-  .margin-side{
-    display:flex;
-    flex-direction:column;
-    min-width:0;
-  }
-
-  .segment{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    padding:8px;
-    font-weight:900;
-    border-bottom:2px solid #111827;
-    min-height:62px;
-  }
-
-  .segment:last-child{border-bottom:0}
-  .labor{background:var(--yellow)}
-  .fixed{background:var(--orange)}
-  .profit-seg{background:var(--green)}
-  .loss-seg{background:var(--red)}
-
-  .segment small,.block small{
-    display:block;
-    margin-top:4px;
-    font-size:12px;
-    font-weight:800;
-    color:#374151;
-  }
-
-  .breakeven-wrap{
-    margin-top:16px;
-  }
-
-  .breakeven-title{
-    display:flex;
-    justify-content:space-between;
-    gap:10px;
-    font-size:13px;
-    font-weight:800;
-    color:#475569;
-    margin-bottom:7px;
-    flex-wrap:wrap;
-  }
-
-  .bar{
-    position:relative;
-    height:22px;
-    border-radius:999px;
-    background:#e5e7eb;
-    overflow:hidden;
-    border:1px solid #cbd5e1;
-  }
-
-  .sales-fill{
-    position:absolute;
-    inset:0 auto 0 0;
-    width:100%;
-    background:#bfdbfe;
-  }
-
-  .break-line{
-    position:absolute;
-    top:-3px;
-    bottom:-3px;
-    width:4px;
-    background:#111827;
-    border-radius:999px;
-  }
-
-  .bar-labels{
-    margin-top:6px;
-    display:flex;
-    justify-content:space-between;
-    gap:10px;
-    font-size:12px;
-    color:var(--muted);
-  }
-
-  .equation{
-    display:grid;
-    grid-template-columns:repeat(5,minmax(0,1fr));
-    gap:8px;
-    margin-top:14px;
-  }
-
-  .eq-card{
-    border:1px solid var(--line);
-    background:#f8fafc;
-    border-radius:12px;
-    padding:10px;
-    text-align:center;
-  }
-
-  .eq-card .t{font-size:12px;color:var(--muted);font-weight:800}
-  .eq-card .v{font-size:16px;font-weight:900;margin-top:4px}
-  .eq-op{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:24px;
-    font-weight:900;
-    color:#64748b;
-  }
-
-  .metrics-panel{
-    margin-top:14px;
-    padding:16px;
-  }
-
-  .metrics-grid{
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:10px;
-  }
-
-  .metric{
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:14px;
-    background:#fff;
-  }
-
-  .metric .k{
-    color:var(--muted);
-    font-size:13px;
-    font-weight:800;
-  }
-
-  .metric .v{
-    margin-top:6px;
-    font-size:22px;
-    font-weight:900;
-  }
-
-  .note{
-    margin-top:12px;
-    border-radius:14px;
-    padding:13px 14px;
-    font-size:14px;
-    font-weight:800;
-    background:#eff6ff;
-    color:#1e3a8a;
-  }
-
-  .note.bad{
-    background:#fff1f2;
-    color:#9f1239;
-  }
-
-  .safety-gauge{
-    margin-top:12px;
-    display:grid;
-    grid-template-columns:160px 1fr;
-    gap:12px;
-    align-items:center;
-  }
-
-  .gauge-track{
-    height:16px;
-    background:#e5e7eb;
-    border-radius:999px;
-    position:relative;
-    overflow:hidden;
-  }
-
-  .gauge-fill{
-    height:100%;
-    background:#93c5fd;
-    border-radius:999px;
-  }
-
-  .muted{color:var(--muted)}
-
-
-  .unrecovered-wrapper{width:34%;margin-left:auto;margin-top:8px;text-align:center}
-  .unrecovered-wrapper.hidden{display:none!important}
-  .connector{font-size:27px;font-weight:900;color:#ef4444;line-height:1}
-  .unrecovered-box{background:#fee2e2;border:2px solid #ef4444;border-radius:12px;padding:12px;color:#991b1b}
-  .unrecovered-box .small-label{font-size:12px;font-weight:900;margin-bottom:3px}
-  #unrecoveredValue{font-size:28px;font-weight:900;margin:4px 0}
-  .loss-label{font-size:13px;font-weight:900}
-  .scale-bar{position:relative;height:28px;border-radius:999px;background:#e5e7eb;border:1px solid #cbd5e1;overflow:visible;margin-top:28px}
-  .range-zone{position:absolute;top:0;bottom:0;border-radius:999px}
-  .range-zone.safe{background:#bbf7d0}.range-zone.shortage{background:#fecaca}
-  .scale-marker{position:absolute;top:-10px;width:3px;height:48px;border-radius:999px;transform:translateX(-1.5px)}
-  .scale-marker.sales{background:#2563eb}.scale-marker.break{background:#dc2626}
-  .scale-marker-label{position:absolute;top:-28px;transform:translateX(-50%);font-size:11px;font-weight:900;white-space:nowrap}
-  .scale-marker-label.sales{color:#1d4ed8}.scale-marker-label.break{color:#b91c1c}
-  .bar-message{margin-top:8px;font-weight:900;font-size:13px}.bar-message.good{color:#166534}.bar-message.bad{color:#b91c1c}
-
-
-  .sim-panel{
-    margin-top:14px;
-    padding:16px;
-  }
-  .sim-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:12px;
-    flex-wrap:wrap;
-    margin-bottom:14px;
-  }
-  .sim-title{
-    margin:0;
-    font-size:22px;
-  }
-  .sim-badge{
-    display:inline-block;
-    margin-top:7px;
-    padding:6px 10px;
-    border-radius:999px;
-    background:#eef2ff;
-    color:#3730a3;
-    font-size:12px;
-    font-weight:900;
-  }
-  .sim-grid{
-    display:grid;
-    grid-template-columns:minmax(320px,430px) 1fr;
-    gap:14px;
-  }
-  .sim-card{
-    border:1px solid var(--line);
-    border-radius:16px;
-    padding:15px;
-    background:#fff;
-  }
-  .sim-card h3{
-    margin:0 0 14px;
-    font-size:17px;
-  }
-  .sim-row{
-    margin-bottom:18px;
-  }
-  .sim-row:last-child{
-    margin-bottom:0;
-  }
-  .sim-row-top{
-    display:flex;
-    justify-content:space-between;
-    gap:10px;
-    align-items:center;
-    margin-bottom:7px;
-  }
-  .sim-row-name{
-    font-size:13px;
-    font-weight:900;
-  }
-  .sim-row-value{
-    font-size:16px;
-    font-weight:900;
-  }
-  input[type="range"]{
-    width:100%;
-    padding:0;
-    border:0;
-  }
-  .sim-actions{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-  .sim-kpis{
-    display:grid;
-    grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:10px;
-    margin-bottom:14px;
-  }
-  .sim-kpi{
-    border:1px solid var(--line);
-    border-radius:14px;
-    padding:12px;
-    background:#f8fafc;
-  }
-  .sim-kpi .k{
-    color:var(--muted);
-    font-size:12px;
-    font-weight:800;
-  }
-  .sim-kpi .v{
-    margin-top:5px;
-    font-size:20px;
-    font-weight:900;
-  }
-  .compare-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:6px;
-  }
-  .compare-table th,.compare-table td{
-    padding:10px 7px;
-    border-bottom:1px solid var(--line);
-    text-align:right;
-    white-space:nowrap;
-  }
-  .compare-table th:first-child,.compare-table td:first-child{
-    text-align:left;
-  }
-  .compare-table th{
-    color:var(--muted);
-    font-size:12px;
-  }
-  .delta-plus{color:#15803d;font-weight:900}
-  .delta-minus{color:#b91c1c;font-weight:900}
-  .sim-comment{
-    margin-top:12px;
-  }
-
-  @media (max-width:980px){
-    header{grid-template-columns:1fr}
-    .top-meta{grid-template-columns:1fr 1fr}
-    .top-meta .field:last-child{grid-column:1 / -1}
-    .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .main-grid{grid-template-columns:1fr}
-    .input-panel{position:static}
-    .sim-grid{grid-template-columns:1fr}
-    .sim-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
-  }
-
-  @media (max-width:620px){
-    .app{padding:10px}
-    .top-meta{grid-template-columns:1fr}
-    .top-meta .field:last-child{grid-column:auto}
-    .kpi-grid{grid-template-columns:1fr}
-    .metrics-grid{grid-template-columns:1fr}
-    .sim-kpis{grid-template-columns:1fr}
-    .button-row{grid-template-columns:1fr}
-    .equation{grid-template-columns:1fr}
-    .eq-op{transform:rotate(90deg)}
-    .safety-gauge{grid-template-columns:1fr}
-    .strac{min-height:320px}
-    .unrecovered-wrapper{width:100%}
-  }
+:root{
+  --bg:#f4f6f8; --panel:#fff; --text:#172033; --muted:#6b7280; --line:#d7dce3;
+  --blue:#1d4ed8; --blue2:#2563eb; --gray:#e5e7eb; --cyan:#e0f2fe;
+  --yellow:#fef3c7; --orange:#fed7aa; --green:#dcfce7; --greenText:#15803d;
+  --red:#fee2e2; --redText:#b91c1c; --shadow:0 10px 28px rgba(15,23,42,.07);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  background:var(--bg); color:var(--text);
+}
+.app{max-width:1560px;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
+h1{margin:0;font-size:clamp(24px,3vw,38px)}
+.subtitle{margin-top:6px;color:var(--muted);font-size:14px}
+.status-row{display:flex;gap:8px;flex-wrap:wrap}
+.pill{font-weight:900;font-size:13px;padding:8px 11px;border-radius:999px;background:#eef2ff;color:#3730a3}
+.pill.ok{background:var(--green);color:#166534}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.top-meta{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;padding:14px;margin-bottom:14px}
+.field label{display:block;font-weight:800;font-size:13px;margin-bottom:6px;color:#374151}
+input,select{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:#fff;color:var(--text)}
+input:focus,select:focus{outline:3px solid rgba(29,78,216,.12);border-color:var(--blue)}
+.main-grid{display:grid;grid-template-columns:300px 1fr;gap:14px;align-items:start}
+.input-panel{padding:16px;position:sticky;top:12px}
+.input-panel h2,.sim-panel h2{margin:0 0 12px;font-size:19px}
+.money-row{margin-bottom:14px}.helper{margin-top:5px;font-size:13px;color:var(--muted)}
+.button-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+button{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:900;cursor:pointer}
+.btn-primary{background:var(--blue);color:#fff}.btn-danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
+.compare-area{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.chart-card{padding:14px}
+.chart-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.chart-head h2{margin:0;font-size:20px}
+.chart-badge{font-size:12px;font-weight:900;padding:7px 10px;border-radius:999px;background:#eef2ff;color:#3730a3}
+.chart-badge.sim{background:#dcfce7;color:#166534}
+.sales-banner{
+  background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border-radius:14px;
+  padding:13px 15px;margin-bottom:9px;display:flex;justify-content:space-between;gap:10px;align-items:flex-end
+}
+.sales-name{font-size:12px;font-weight:900;opacity:.9}
+.sales-value{font-size:clamp(22px,2.4vw,36px);font-weight:900;line-height:1}
+.sales-sub{font-size:12px;margin-top:4px;opacity:.9}
+.rate-value{font-size:24px;font-weight:900;text-align:right}
+.strac-main{min-height:330px;border:2px solid #111827;border-radius:14px;overflow:hidden;display:flex;background:#fff}
+.variable-area{display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;font-weight:900;background:var(--gray);border-right:2px solid #111827;min-width:0}
+.marginal-area{display:flex;flex-direction:column;min-width:0}
+.marginal-header{background:var(--cyan);padding:7px 9px;display:flex;justify-content:space-between;gap:7px;font-weight:900;font-size:11px;border-bottom:2px solid #111827}
+.segment{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:7px;font-weight:900;min-height:54px}
+.labor{background:var(--yellow);border-bottom:2px solid #111827}
+.fixed{background:var(--orange)}
+.profit{background:var(--green);border-top:2px solid #111827}
+.segment small,.variable-area small{display:block;margin-top:3px;font-size:11px;color:#374151;font-weight:800}
+.hidden{display:none!important}
+.loss-box-wrap{width:36%;margin-left:auto;margin-top:7px;text-align:center}
+.loss-arrow{font-size:24px;font-weight:900;color:#ef4444;line-height:1}
+.loss-box{background:var(--red);border:2px solid #ef4444;border-radius:12px;padding:10px;color:#991b1b;font-weight:900}
+.loss-box .loss-main{font-size:24px;margin:3px 0}
+.chart-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+.metric{border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc}
+.metric .k{font-size:11px;color:var(--muted);font-weight:800}
+.metric .v{font-size:16px;font-weight:900;margin-top:4px}
+.sim-panel{padding:16px;margin-top:14px}
+.sim-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
+.sim-grid{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:14px}
+.sim-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
+.sim-card h3{margin:0 0 12px;font-size:17px}
+.sim-row{margin-bottom:16px}
+.sim-row-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;align-items:center}
+.sim-row-name{font-size:13px;font-weight:900}.sim-row-value{font-size:16px;font-weight:900}
+input[type="range"]{width:100%;padding:0;border:0}
+.sim-actions{display:flex;gap:8px;flex-wrap:wrap}
+.compare-table{width:100%;border-collapse:collapse}
+.compare-table th,.compare-table td{padding:9px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.compare-table th:first-child,.compare-table td:first-child{text-align:left}
+.compare-table th{color:var(--muted);font-size:12px}
+.delta-plus{color:#15803d;font-weight:900}.delta-minus{color:#b91c1c;font-weight:900}
+.note{margin-top:12px;border-radius:14px;padding:13px 14px;font-size:14px;font-weight:800;background:#eff6ff;color:#1e3a8a}
+.note.bad{background:#fff1f2;color:#9f1239}
+@media(max-width:1180px){
+  .main-grid{grid-template-columns:1fr}.input-panel{position:static}
+}
+@media(max-width:900px){
+  .compare-area{grid-template-columns:1fr}.sim-grid{grid-template-columns:1fr}
+  .top-meta{grid-template-columns:1fr 1fr}.top-meta .field:last-child{grid-column:1/-1}
+}
+@media(max-width:620px){
+  .app{padding:10px}.top-meta{grid-template-columns:1fr}.top-meta .field:last-child{grid-column:auto}
+  .button-row{grid-template-columns:1fr}.chart-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 </style>
 </head>
 <body>
 <div class="app">
 
-  <header>
+<header>
+  <div>
+    <h1>STRAC経営分析 Prototype 02-2</h1>
+    <div class="subtitle">現在のSTRAC図と「もしも」のSTRAC図を横に並べて、利益構造の変化を比較します。</div>
+  </div>
+  <div class="status-row">
+    <div class="pill" id="runtimeStatus">JavaScript確認中</div>
+    <div class="pill" id="saveStatus">保存機能確認中</div>
+  </div>
+</header>
+
+<section class="panel top-meta">
+  <div class="field"><label for="company">会社名</label><input id="company" value="株式会社サンプル"></div>
+  <div class="field"><label for="period">対象期間</label><input id="period" value="2026年度"></div>
+  <div class="field"><label for="unit">表示単位</label>
+    <select id="unit"><option value="yen">円</option><option value="man">万円</option><option value="million">百万円</option></select>
+  </div>
+</section>
+
+<section class="main-grid">
+  <aside class="panel input-panel">
+    <h2>現在値の入力</h2>
+    <div class="money-row"><div class="field"><label for="sales">売上高</label><input id="sales" inputmode="text" value="100000000"><div class="helper" id="salesHelper"></div></div></div>
+    <div class="money-row"><div class="field"><label for="variableCost">変動費</label><input id="variableCost" inputmode="text" value="60000000"><div class="helper" id="variableHelper"></div></div></div>
+    <div class="money-row"><div class="field"><label for="laborCost">人件費</label><input id="laborCost" inputmode="text" value="20000000"><div class="helper" id="laborHelper"></div></div></div>
+    <div class="money-row"><div class="field"><label for="otherFixed">その他固定費</label><input id="otherFixed" inputmode="text" value="15000000"><div class="helper" id="otherFixedHelper"></div></div></div>
+    <div class="button-row"><button class="btn-primary" id="sampleBtn">サンプル値</button><button class="btn-danger" id="clearBtn">全削除</button></div>
+  </aside>
+
+  <div class="compare-area">
+    <section class="panel chart-card">
+      <div class="chart-head"><h2>現在のSTRAC図</h2><span class="chart-badge">現在</span></div>
+      <div class="sales-banner">
+        <div><div class="sales-name">売上高</div><div class="sales-value" id="curSalesMain"></div><div class="sales-sub" id="curSalesSub"></div></div>
+        <div><div class="sales-name">限界利益率</div><div class="rate-value" id="curMarginalRateTop"></div></div>
+      </div>
+      <div class="strac-main">
+        <div class="variable-area" id="curVariableArea"></div>
+        <div class="marginal-area" id="curMarginalArea">
+          <div class="marginal-header"><span>限界利益</span><span id="curMarginalHeader"></span></div>
+          <div class="segment labor" id="curLabor"></div>
+          <div class="segment fixed" id="curFixed"></div>
+          <div class="segment profit" id="curProfit"></div>
+        </div>
+      </div>
+      <div class="loss-box-wrap hidden" id="curLossWrap">
+        <div class="loss-arrow">↓</div>
+        <div class="loss-box">未回収固定費<div class="loss-main" id="curLossValue"></div><div>＝営業損失</div></div>
+      </div>
+      <div class="chart-metrics">
+        <div class="metric"><div class="k">変動費率</div><div class="v" id="curVariableRate"></div></div>
+        <div class="metric"><div class="k">固定費合計</div><div class="v" id="curFixedTotal"></div></div>
+        <div class="metric"><div class="k">損益分岐点売上高</div><div class="v" id="curBreakEven"></div></div>
+        <div class="metric"><div class="k">安全余裕率</div><div class="v" id="curSafetyRate"></div></div>
+      </div>
+    </section>
+
+    <section class="panel chart-card">
+      <div class="chart-head"><h2>もしものSTRAC図</h2><span class="chart-badge sim" id="simScenarioBadge">売上高110%</span></div>
+      <div class="sales-banner">
+        <div><div class="sales-name">売上高</div><div class="sales-value" id="simSalesMain"></div><div class="sales-sub" id="simSalesSub"></div></div>
+        <div><div class="sales-name">限界利益率</div><div class="rate-value" id="simMarginalRateTop"></div></div>
+      </div>
+      <div class="strac-main">
+        <div class="variable-area" id="simVariableArea"></div>
+        <div class="marginal-area" id="simMarginalArea">
+          <div class="marginal-header"><span>限界利益</span><span id="simMarginalHeader"></span></div>
+          <div class="segment labor" id="simLabor"></div>
+          <div class="segment fixed" id="simFixed"></div>
+          <div class="segment profit" id="simProfitBlock"></div>
+        </div>
+      </div>
+      <div class="loss-box-wrap hidden" id="simLossWrap">
+        <div class="loss-arrow">↓</div>
+        <div class="loss-box">未回収固定費<div class="loss-main" id="simLossValue"></div><div>＝営業損失</div></div>
+      </div>
+      <div class="chart-metrics">
+        <div class="metric"><div class="k">変動費率</div><div class="v" id="simVariableRateMetric"></div></div>
+        <div class="metric"><div class="k">固定費合計</div><div class="v" id="simFixedTotal"></div></div>
+        <div class="metric"><div class="k">損益分岐点売上高</div><div class="v" id="simBreakEven"></div></div>
+        <div class="metric"><div class="k">安全余裕率</div><div class="v" id="simSafetyRate"></div></div>
+      </div>
+    </section>
+  </div>
+</section>
+
+<section class="panel sim-panel">
+  <div class="sim-head">
     <div>
-      <h1>STRAC経営分析 Prototype 02-1</h1>
-      <div class="subtitle">現在値を残したまま、売上・変動費率・人件費・固定費を動かして将来の利益を試算できます。</div>
+      <h2>もしも経営シミュレーター</h2>
+      <div class="subtitle">初期値は「売上高110%、変動費率60%、固定費据え置き」です。</div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="save-status" id="runtimeStatus">JavaScript確認中</div><div class="save-status" id="saveStatus">保存機能確認中</div></div>
-  </header>
+    <div class="sim-actions">
+      <button class="btn-primary" id="resetSimBtn">現在値に戻す</button>
+      <button class="btn-danger" id="sales110Btn">売上110%にする</button>
+    </div>
+  </div>
 
-  <section class="panel top-meta">
-    <div class="field">
-      <label for="company">会社名</label>
-      <input id="company" value="株式会社サンプル">
-    </div>
-    <div class="field">
-      <label for="period">対象期間</label>
-      <input id="period" value="2026年度">
-    </div>
-    <div class="field">
-      <label for="unit">表示単位</label>
-      <select id="unit">
-        <option value="yen">円</option>
-        <option value="man">万円</option>
-        <option value="million">百万円</option>
-      </select>
-    </div>
-  </section>
+  <div class="sim-grid">
+    <div class="sim-card">
+      <h3>シミュレーション条件</h3>
 
-  <section class="kpi-grid">
-    <div class="kpi">
-      <div class="label">売上高</div>
-      <div class="main" id="kpiSales"></div>
-      <div class="sub" id="kpiSalesSub"></div>
-    </div>
-    <div class="kpi">
-      <div class="label">限界利益</div>
-      <div class="main" id="kpiMarginal"></div>
-      <div class="sub" id="kpiMarginalSub"></div>
-    </div>
-    <div class="kpi">
-      <div class="label">固定費</div>
-      <div class="main" id="kpiFixed"></div>
-      <div class="sub" id="kpiFixedSub"></div>
-    </div>
-    <div class="kpi profit" id="profitKpi">
-      <div class="label" id="profitKpiLabel">営業利益</div>
-      <div class="main" id="kpiProfit"></div>
-      <div class="sub" id="kpiProfitSub"></div>
-    </div>
-  </section>
-
-  <section class="main-grid">
-    <div class="panel input-panel">
-      <h2>入力</h2>
-
-      <div class="money-row">
-        <div class="field">
-          <label for="sales">売上高</label>
-          <input id="sales" inputmode="text" value="100000000">
-          <div class="helper" id="salesHelper"></div>
-        </div>
+      <div class="sim-row">
+        <div class="sim-row-top"><span class="sim-row-name">売上高</span><span class="sim-row-value" id="simSalesPctLabel"></span></div>
+        <input type="range" id="simSalesPct" min="50" max="150" step="1" value="110">
+        <div class="helper">現在売上高の50〜150%</div>
       </div>
 
-      <div class="money-row">
-        <div class="field">
-          <label for="variableCost">変動費</label>
-          <input id="variableCost" inputmode="text" value="60000000">
-          <div class="helper" id="variableHelper"></div>
-        </div>
+      <div class="sim-row">
+        <div class="sim-row-top"><span class="sim-row-name">変動費率</span><span class="sim-row-value" id="simVariableRateLabel"></span></div>
+        <input type="range" id="simVariableRate" min="0" max="100" step="0.1" value="60">
       </div>
 
-      <div class="money-row">
-        <div class="field">
-          <label for="laborCost">人件費</label>
-          <input id="laborCost" inputmode="text" value="20000000">
-          <div class="helper" id="laborHelper"></div>
-        </div>
+      <div class="sim-row">
+        <div class="sim-row-top"><span class="sim-row-name">人件費</span><span class="sim-row-value" id="simLaborPctLabel"></span></div>
+        <input type="range" id="simLaborPct" min="50" max="150" step="1" value="100">
       </div>
 
-      <div class="money-row">
-        <div class="field">
-          <label for="otherFixed">その他固定費</label>
-          <input id="otherFixed" inputmode="text" value="15000000">
-          <div class="helper" id="otherFixedHelper"></div>
-        </div>
-      </div>
-
-      <div class="button-row">
-        <button class="btn-primary" id="sampleBtn">サンプル値に戻す</button>
-        <button class="btn-danger" id="clearBtn">入力をすべて削除</button>
+      <div class="sim-row">
+        <div class="sim-row-top"><span class="sim-row-name">その他固定費</span><span class="sim-row-value" id="simOtherPctLabel"></span></div>
+        <input type="range" id="simOtherPct" min="50" max="150" step="1" value="100">
       </div>
     </div>
 
-    <div>
-      <section class="panel chart-panel">
-        <div class="chart-head">
-          <h2>STRAC図</h2>
-          <div class="status-chip good" id="statusChip">黒字</div>
-        </div>
-
-        <div class="sales-banner">
-          <div>
-            <div class="name">売上高</div>
-            <div class="value" id="salesBannerMain"></div>
-            <div class="sub" id="salesBannerSub"></div>
-          </div>
-          <div style="text-align:right">
-            <div class="name">限界利益率</div>
-            <div style="font-size:26px;font-weight:900" id="salesBannerRate"></div>
-          </div>
-        </div>
-
-        <div class="strac">
-          <div class="block variable" id="variableBlock"></div>
-          <div class="margin-side" id="marginSide">
-            <div class="segment labor" id="laborBlock"></div>
-            <div class="segment fixed" id="fixedBlock"></div>
-            <div class="segment profit-seg" id="profitBlock"></div>
-          </div>
-        </div>
-
-        <div class="unrecovered-wrapper hidden" id="unrecoveredWrapper">
-          <div class="connector">↓</div>
-          <div class="unrecovered-box">
-            <div class="small-label">不足</div>
-            <strong>未回収固定費</strong>
-            <div id="unrecoveredValue"></div>
-            <div id="unrecoveredRate"></div>
-            <div class="loss-label">＝ 営業損失</div>
-          </div>
-        </div>
-
-        <div class="breakeven-wrap">
-          <div class="breakeven-title">
-            <span>損益分岐点バー</span>
-            <span id="breakEvenText"></span>
-          </div>
-          <div class="scale-bar">
-            <div class="range-zone safe" id="safeZone"></div>
-            <div class="range-zone shortage" id="shortageZone"></div>
-            <div class="scale-marker sales" id="salesMarker"></div>
-            <div class="scale-marker break" id="breakMarker"></div>
-            <div class="scale-marker-label sales" id="salesMarkerLabel">現在売上</div>
-            <div class="scale-marker-label break" id="breakMarkerLabel">損益分岐点</div>
-          </div>
-          <div class="bar-labels"><span>0</span><span id="scaleMaxLabel"></span></div>
-          <div class="bar-message good" id="barMessage"></div>
-        </div>
-
-        <div class="equation">
-          <div class="eq-card">
-            <div class="t">売上高</div>
-            <div class="v" id="eqSales"></div>
-          </div>
-          <div class="eq-op">−</div>
-          <div class="eq-card">
-            <div class="t">変動費</div>
-            <div class="v" id="eqVariable"></div>
-          </div>
-          <div class="eq-op">＝</div>
-          <div class="eq-card">
-            <div class="t">限界利益</div>
-            <div class="v" id="eqMarginal"></div>
-          </div>
-        </div>
-
-        <div class="equation" style="grid-template-columns:repeat(5,minmax(0,1fr))">
-          <div class="eq-card">
-            <div class="t">限界利益</div>
-            <div class="v" id="eqMarginal2"></div>
-          </div>
-          <div class="eq-op">−</div>
-          <div class="eq-card">
-            <div class="t">固定費</div>
-            <div class="v" id="eqFixed"></div>
-          </div>
-          <div class="eq-op">＝</div>
-          <div class="eq-card">
-            <div class="t" id="eqProfitLabel">営業利益</div>
-            <div class="v" id="eqProfit"></div>
-          </div>
-        </div>
-
-        <div class="note" id="analysisNote"></div>
-      </section>
-
-      <section class="panel metrics-panel">
-        <h2>経営指標</h2>
-        <div class="metrics-grid">
-          <div class="metric"><div class="k">変動費率</div><div class="v" id="variableRate"></div></div>
-          <div class="metric"><div class="k">限界利益率</div><div class="v" id="marginalRate"></div></div>
-          <div class="metric"><div class="k">労働分配率</div><div class="v" id="laborShare"></div></div>
-          <div class="metric"><div class="k">固定費回収率</div><div class="v" id="fixedRecoveryRate"></div></div>
-          <div class="metric"><div class="k">損益分岐点売上高</div><div class="v" id="breakEven"></div></div>
-          <div class="metric"><div class="k">安全余裕率</div><div class="v" id="safetyRate"></div></div>
-        </div>
-
-        <div class="safety-gauge">
-          <div>
-            <div style="font-size:13px;font-weight:800;color:#64748b">安全余裕ゲージ</div>
-            <div style="font-size:22px;font-weight:900;margin-top:4px" id="safetyGaugeText"></div>
-          </div>
-          <div>
-            <div class="gauge-track">
-              <div class="gauge-fill" id="gaugeFill"></div>
-            </div>
-            <div class="muted" style="font-size:12px;margin-top:5px">売上が損益分岐点をどれだけ上回っているかを示します。</div>
-          </div>
-        </div>
-      </section>
+    <div class="sim-card">
+      <h3>主要指標の比較</h3>
+      <table class="compare-table">
+        <thead><tr><th>項目</th><th>現在</th><th>もしも</th><th>差</th></tr></thead>
+        <tbody>
+          <tr><td>売上高</td><td id="cmpSalesNow"></td><td id="cmpSalesSim"></td><td id="cmpSalesDiff"></td></tr>
+          <tr><td>変動費</td><td id="cmpVariableNow"></td><td id="cmpVariableSim"></td><td id="cmpVariableDiff"></td></tr>
+          <tr><td>限界利益</td><td id="cmpMarginalNow"></td><td id="cmpMarginalSim"></td><td id="cmpMarginalDiff"></td></tr>
+          <tr><td>固定費</td><td id="cmpFixedNow"></td><td id="cmpFixedSim"></td><td id="cmpFixedDiff"></td></tr>
+          <tr><td>営業利益</td><td id="cmpProfitNow"></td><td id="cmpProfitSim"></td><td id="cmpProfitDiff"></td></tr>
+          <tr><td>安全余裕率</td><td id="cmpSafetyNow"></td><td id="cmpSafetySim"></td><td id="cmpSafetyDiff"></td></tr>
+        </tbody>
+      </table>
+      <div class="note" id="simComment"></div>
     </div>
-  </section>
+  </div>
+</section>
 
-
-  <section class="panel sim-panel" id="simulatorSection">
-    <div class="sim-head">
-      <div>
-        <h2 class="sim-title">もしも経営シミュレーター</h2>
-        <div class="subtitle">現在値は変更せず、条件だけを動かして結果を比較します。</div>
-        <span class="sim-badge">Prototype 02-1 シミュレーター表示中</span>
-      </div>
-      <div class="sim-actions">
-        <button class="btn-primary" id="simResetBtn">現在値に戻す</button>
-        <button class="btn-danger" id="simRedTestBtn">赤字テスト</button>
-      </div>
-    </div>
-
-    <div class="sim-grid">
-      <div class="sim-card">
-        <h3>シミュレーション条件</h3>
-
-        <div class="sim-row">
-          <div class="sim-row-top">
-            <span class="sim-row-name">売上高</span>
-            <span class="sim-row-value" id="simSalesLabel"></span>
-          </div>
-          <input type="range" id="simSalesPct" min="50" max="150" step="1" value="100">
-          <div class="helper">現在売上高の50〜150%</div>
-        </div>
-
-        <div class="sim-row">
-          <div class="sim-row-top">
-            <span class="sim-row-name">変動費率</span>
-            <span class="sim-row-value" id="simVariableRateLabel"></span>
-          </div>
-          <input type="range" id="simVariableRate" min="0" max="100" step="0.1" value="60">
-          <div class="helper">売上高に対する変動費の割合</div>
-        </div>
-
-        <div class="sim-row">
-          <div class="sim-row-top">
-            <span class="sim-row-name">人件費</span>
-            <span class="sim-row-value" id="simLaborPctLabel"></span>
-          </div>
-          <input type="range" id="simLaborPct" min="50" max="150" step="1" value="100">
-          <div class="helper">現在人件費の50〜150%</div>
-        </div>
-
-        <div class="sim-row">
-          <div class="sim-row-top">
-            <span class="sim-row-name">その他固定費</span>
-            <span class="sim-row-value" id="simOtherPctLabel"></span>
-          </div>
-          <input type="range" id="simOtherPct" min="50" max="150" step="1" value="100">
-          <div class="helper">現在のその他固定費の50〜150%</div>
-        </div>
-      </div>
-
-      <div class="sim-card">
-        <h3>現在値との比較</h3>
-
-        <div class="sim-kpis">
-          <div class="sim-kpi"><div class="k">シミュレーション営業利益</div><div class="v" id="simProfit"></div></div>
-          <div class="sim-kpi"><div class="k">現在利益との差</div><div class="v" id="simProfitDelta"></div></div>
-          <div class="sim-kpi"><div class="k">損益分岐点売上高</div><div class="v" id="simBreakEven"></div></div>
-          <div class="sim-kpi"><div class="k">安全余裕率</div><div class="v" id="simSafetyRate"></div></div>
-        </div>
-
-        <table class="compare-table">
-          <thead>
-            <tr><th>項目</th><th>現在</th><th>もしも</th><th>差</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>売上高</td><td id="cmpSalesNow"></td><td id="cmpSalesSim"></td><td id="cmpSalesDiff"></td></tr>
-            <tr><td>変動費</td><td id="cmpVariableNow"></td><td id="cmpVariableSim"></td><td id="cmpVariableDiff"></td></tr>
-            <tr><td>限界利益</td><td id="cmpMarginalNow"></td><td id="cmpMarginalSim"></td><td id="cmpMarginalDiff"></td></tr>
-            <tr><td>固定費</td><td id="cmpFixedNow"></td><td id="cmpFixedSim"></td><td id="cmpFixedDiff"></td></tr>
-            <tr><td>営業利益</td><td id="cmpProfitNow"></td><td id="cmpProfitSim"></td><td id="cmpProfitDiff"></td></tr>
-          </tbody>
-        </table>
-
-        <div class="note sim-comment" id="simComment"></div>
-      </div>
-    </div>
-  </section>
 </div>
 
 <script>
-const STORAGE_KEY = 'strac-prototype-02-1-v1';
+const STORAGE_KEY='strac-prototype-02-2-v1';
+const el=id=>document.getElementById(id);
 
-const el = id => document.getElementById(id);
-
-function parseJapaneseMoney(input){
-  if(input === null || input === undefined) return 0;
-  let s = String(input).trim().replace(/,/g,'').replace(/円/g,'');
-  if(!s) return 0;
-
-  let total = 0;
-  let matched = false;
-
-  const oku = s.match(/(-?\d+(?:\.\d+)?)\s*億/);
-  if(oku){ total += parseFloat(oku[1]) * 100000000; matched = true; }
-
-  const man = s.match(/(-?\d+(?:\.\d+)?)\s*万/);
-  if(man){ total += parseFloat(man[1]) * 10000; matched = true; }
-
-  if(matched){
-    const tail = s.replace(/-?\d+(?:\.\d+)?\s*億/,'').replace(/-?\d+(?:\.\d+)?\s*万/,'').trim();
-    if(tail && /^-?\d+(?:\.\d+)?$/.test(tail)) total += parseFloat(tail);
-    return Math.max(0, Math.round(total));
-  }
-
-  const n = Number(s.replace(/[^\d.-]/g,''));
-  return Math.max(0, Math.round(Number.isFinite(n) ? n : 0));
+function parseMoney(input){
+  let s=String(input??'').trim().replace(/,/g,'').replace(/円/g,'');
+  if(!s)return 0;
+  let total=0,matched=false;
+  const oku=s.match(/(-?\d+(?:\.\d+)?)\s*億/);
+  if(oku){total+=parseFloat(oku[1])*100000000;matched=true;}
+  const man=s.match(/(-?\d+(?:\.\d+)?)\s*万/);
+  if(man){total+=parseFloat(man[1])*10000;matched=true;}
+  if(matched)return Math.max(0,Math.round(total));
+  const n=Number(s.replace(/[^\d.-]/g,''));
+  return Math.max(0,Math.round(Number.isFinite(n)?n:0));
 }
-
-function formatExactYen(n){
-  return `${Math.round(n).toLocaleString('ja-JP')}円`;
-}
-
-function formatJapanese(n){
-  n = Math.round(n);
-  if(n >= 100000000){
-    const oku = Math.floor(n / 100000000);
-    const rest = n % 100000000;
-    const man = Math.floor(rest / 10000);
-    if(man > 0) return `${oku}億${man.toLocaleString('ja-JP')}万円`;
-    return `${oku}億円`;
+function exactYen(n){return `${Math.round(n).toLocaleString('ja-JP')}円`;}
+function jpMoney(n){
+  n=Math.round(Math.abs(n));
+  if(n>=100000000){
+    const oku=Math.floor(n/100000000),man=Math.floor((n%100000000)/10000);
+    return man?`${oku}億${man.toLocaleString('ja-JP')}万円`:`${oku}億円`;
   }
-  if(n >= 10000){
-    return `${Math.round(n/10000).toLocaleString('ja-JP')}万円`;
-  }
+  if(n>=10000)return `${Math.round(n/10000).toLocaleString('ja-JP')}万円`;
   return `${n.toLocaleString('ja-JP')}円`;
 }
-
-function unitFormat(n){
-  const unit = el('unit').value;
-  if(unit === 'man') return `${(n/10000).toLocaleString('ja-JP',{maximumFractionDigits:1})}万円`;
-  if(unit === 'million') return `${(n/1000000).toLocaleString('ja-JP',{maximumFractionDigits:1})}百万円`;
-  return formatExactYen(n);
+function unitMoney(n){
+  const unit=el('unit').value,sign=n<0?'▲':'',a=Math.abs(n);
+  if(unit==='man')return `${sign}${(a/10000).toLocaleString('ja-JP',{maximumFractionDigits:1})}万円`;
+  if(unit==='million')return `${sign}${(a/1000000).toLocaleString('ja-JP',{maximumFractionDigits:1})}百万円`;
+  return `${sign}${Math.round(a).toLocaleString('ja-JP')}円`;
 }
-
-function pct(v){
-  return Number.isFinite(v) ? `${(v*100).toFixed(1)}%` : '—';
-}
-
-function setSaving(){
-  if(!storageAvailable()){
-    el('saveStatus').textContent = '自動保存不可';
-    return;
-  }
-  el('saveStatus').textContent = '保存中…';
-  clearTimeout(window.__saveTimer);
-  window.__saveTimer = setTimeout(() => {
-    saveState();
-  }, 250);
-}
+function pct(v){return Number.isFinite(v)?`${(v*100).toFixed(1)}%`:'—';}
+function helper(n){return `${exactYen(n)} ＝ ${jpMoney(n)}`;}
 
 function storageAvailable(){
-  try{
-    const k = '__strac_test__';
-    localStorage.setItem(k,'1');
-    localStorage.removeItem(k);
-    return true;
-  }catch(e){
-    return false;
-  }
+  try{localStorage.setItem('__strac_test','1');localStorage.removeItem('__strac_test');return true;}
+  catch(e){return false;}
 }
-
 function saveState(){
-  if(!storageAvailable()){
-    el('saveStatus').textContent = '自動保存不可';
-    return;
-  }
-  try{
-    const data = {
-      company: el('company').value,
-      period: el('period').value,
-      unit: el('unit').value,
-      sales: el('sales').value,
-      variableCost: el('variableCost').value,
-      laborCost: el('laborCost').value,
-      otherFixed: el('otherFixed').value
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    el('saveStatus').textContent = '✓ 保存済み';
-  }catch(e){
-    el('saveStatus').textContent = '自動保存不可';
-  }
+  if(!storageAvailable()){el('saveStatus').textContent='自動保存不可';return;}
+  const d={company:el('company').value,period:el('period').value,unit:el('unit').value,
+    sales:el('sales').value,variableCost:el('variableCost').value,laborCost:el('laborCost').value,otherFixed:el('otherFixed').value};
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(d));
+  el('saveStatus').textContent='✓ 保存済み';el('saveStatus').classList.add('ok');
 }
-
 function loadState(){
-  if(!storageAvailable()){
-    el('saveStatus').textContent = '自動保存不可';
-    return;
-  }
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw){
-      el('saveStatus').textContent = '✓ 保存準備OK';
-      return;
-    }
-    const d = JSON.parse(raw);
-    Object.entries(d).forEach(([k,v])=>{
-      if(el(k)) el(k).value = v;
-    });
-    el('saveStatus').textContent = '✓ 保存済み';
-  }catch(e){
-    el('saveStatus').textContent = '自動保存不可';
-  }
+  if(!storageAvailable()){el('saveStatus').textContent='自動保存不可';return;}
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(raw){try{const d=JSON.parse(raw);Object.entries(d).forEach(([k,v])=>{if(el(k))el(k).value=v;});}catch(e){}}
+  el('saveStatus').textContent='✓ 保存準備OK';el('saveStatus').classList.add('ok');
+}
+let saveTimer;
+function scheduleSave(){clearTimeout(saveTimer);el('saveStatus').textContent='保存中…';saveTimer=setTimeout(saveState,250);}
+
+function calcData(sales,variable,labor,otherFixed){
+  const marginal=sales-variable;
+  const fixed=labor+otherFixed;
+  const profit=marginal-fixed;
+  const variableRate=sales>0?variable/sales:NaN;
+  const marginalRate=sales>0?marginal/sales:NaN;
+  const breakEven=marginalRate>0?fixed/marginalRate:NaN;
+  const safetyRate=sales>0&&Number.isFinite(breakEven)?(sales-breakEven)/sales:NaN;
+  const positiveMargin=Math.max(0,marginal);
+  const recoveredLabor=Math.min(labor,positiveMargin);
+  const afterLabor=Math.max(0,positiveMargin-recoveredLabor);
+  const recoveredOther=Math.min(otherFixed,afterLabor);
+  const unrecovered=(labor-recoveredLabor)+(otherFixed-recoveredOther);
+  return {sales,variable,labor,otherFixed,marginal,fixed,profit,variableRate,marginalRate,breakEven,safetyRate,
+          positiveMargin,recoveredLabor,recoveredOther,unrecovered};
 }
 
-function helperText(n){
-  return `${formatExactYen(n)} ＝ ${formatJapanese(n)}`;
+function renderChart(prefix,d){
+  el(prefix+'SalesMain').textContent=unitMoney(d.sales);
+  el(prefix+'SalesSub').textContent=`${jpMoney(d.sales)} ・ 売上高100%`;
+  el(prefix+'MarginalRateTop').textContent=pct(d.marginalRate);
+
+  const varW=d.sales>0?Math.max(0,Math.min(100,d.variable/d.sales*100)):0;
+  el(prefix+'VariableArea').style.width=`${varW}%`;
+  el(prefix+'MarginalArea').style.width=`${Math.max(0,100-varW)}%`;
+  el(prefix+'VariableArea').innerHTML=`<div>変動費<br>${jpMoney(d.variable)}<small>${pct(d.variableRate)}</small></div>`;
+  el(prefix+'MarginalHeader').textContent=`${jpMoney(Math.max(0,d.marginal))} ・ ${pct(d.marginalRate)}`;
+
+  const den=Math.max(d.positiveMargin,1);
+  const laborFlex=Math.max(d.recoveredLabor/den,0.01);
+  const fixedFlex=Math.max(d.recoveredOther/den,0.01);
+  const profitFlex=Math.max(Math.max(d.profit,0)/den,0.01);
+
+  el(prefix+'Labor').style.flex=`${laborFlex} 1 0`;
+  el(prefix+'Fixed').style.flex=`${fixedFlex} 1 0`;
+  el(prefix+'Profit').style.flex=`${profitFlex} 1 0`;
+
+  el(prefix+'Labor').innerHTML=`人件費<br>${jpMoney(d.recoveredLabor)}<small>${d.sales>0?pct(d.recoveredLabor/d.sales):'—'}</small>`;
+
+  if(d.profit<0){
+    el(prefix+'Fixed').innerHTML=`その他固定費<br>回収分 ${jpMoney(d.recoveredOther)}<small>${d.sales>0?pct(d.recoveredOther/d.sales):'—'}</small>`;
+    el(prefix+'Profit').classList.add('hidden');
+    el(prefix+'LossWrap').classList.remove('hidden');
+    el(prefix+'LossValue').textContent=`▲${jpMoney(d.unrecovered)}`;
+  }else{
+    el(prefix+'Fixed').innerHTML=`その他固定費<br>${jpMoney(d.otherFixed)}<small>${d.sales>0?pct(d.otherFixed/d.sales):'—'}</small>`;
+    el(prefix+'Profit').classList.remove('hidden');
+    el(prefix+'Profit').innerHTML=`営業利益<br>${jpMoney(d.profit)}<small>${d.sales>0?pct(d.profit/d.sales):'—'}</small>`;
+    el(prefix+'LossWrap').classList.add('hidden');
+  }
+
+  el(prefix+'VariableRate').textContent=pct(d.variableRate);
+  el(prefix+'FixedTotal').textContent=unitMoney(d.fixed);
+  el(prefix+'BreakEven').textContent=Number.isFinite(d.breakEven)?unitMoney(d.breakEven):'—';
+  el(prefix+'SafetyRate').textContent=pct(d.safetyRate);
 }
 
-function update(){
-  const sales = parseJapaneseMoney(el('sales').value);
-  const variable = parseJapaneseMoney(el('variableCost').value);
-  const labor = parseJapaneseMoney(el('laborCost').value);
-  const otherFixed = parseJapaneseMoney(el('otherFixed').value);
+function currentData(){
+  return calcData(
+    parseMoney(el('sales').value),
+    parseMoney(el('variableCost').value),
+    parseMoney(el('laborCost').value),
+    parseMoney(el('otherFixed').value)
+  );
+}
+function scenarioData(){
+  const b=currentData();
+  const salesPct=Number(el('simSalesPct').value)/100;
+  const variableRate=Number(el('simVariableRate').value)/100;
+  const laborPct=Number(el('simLaborPct').value)/100;
+  const otherPct=Number(el('simOtherPct').value)/100;
+  return calcData(
+    b.sales*salesPct,
+    b.sales*salesPct*variableRate,
+    b.labor*laborPct,
+    b.otherFixed*otherPct
+  );
+}
 
-  const marginal = sales - variable;
-  const fixed = labor + otherFixed;
-  const profit = marginal - fixed;
-  const isLoss = profit < 0;
+function signedMoney(n){
+  if(Math.abs(n)<0.5)return '±0円';
+  return `${n>0?'+':'▲'}${jpMoney(Math.abs(n))}`;
+}
+function setDelta(id,n){
+  const node=el(id);
+  node.textContent=signedMoney(n);
+  node.classList.remove('delta-plus','delta-minus');
+  if(n>0)node.classList.add('delta-plus');
+  if(n<0)node.classList.add('delta-minus');
+}
+function setPctDelta(id,n){
+  const node=el(id);
+  node.textContent=Number.isFinite(n)?`${n>0?'+':''}${(n*100).toFixed(1)}pt`:'—';
+  node.classList.remove('delta-plus','delta-minus');
+  if(n>0)node.classList.add('delta-plus');
+  if(n<0)node.classList.add('delta-minus');
+}
 
-  const variableRate = sales > 0 ? variable / sales : NaN;
-  const marginalRate = sales > 0 ? marginal / sales : NaN;
-  const laborShare = marginal > 0 ? labor / marginal : NaN;
-  const profitRate = sales > 0 ? profit / sales : NaN;
-  const breakEven = marginalRate > 0 ? fixed / marginalRate : NaN;
-  const safetyAmount = Number.isFinite(breakEven) ? sales - breakEven : NaN;
-  const safetyRate = sales > 0 && Number.isFinite(safetyAmount) ? safetyAmount / sales : NaN;
+function updateAll(){
+  const cur=currentData();
+  const sim=scenarioData();
 
-  const positiveMargin = Math.max(0, marginal);
-  const recoveredLabor = Math.min(labor, positiveMargin);
-  const remainingAfterLabor = Math.max(0, positiveMargin - recoveredLabor);
-  const recoveredOtherFixed = Math.min(otherFixed, remainingAfterLabor);
-  const unrecoveredLabor = Math.max(0, labor - recoveredLabor);
-  const unrecoveredOtherFixed = Math.max(0, otherFixed - recoveredOtherFixed);
-  const unrecoveredFixed = unrecoveredLabor + unrecoveredOtherFixed;
-  const fixedRecoveryRate = fixed > 0 ? Math.min(positiveMargin / fixed, 1) : 1;
+  el('salesHelper').textContent=helper(cur.sales);
+  el('variableHelper').textContent=helper(cur.variable);
+  el('laborHelper').textContent=helper(cur.labor);
+  el('otherFixedHelper').textContent=helper(cur.otherFixed);
 
-  el('salesHelper').textContent = helperText(sales);
-  el('variableHelper').textContent = helperText(variable);
-  el('laborHelper').textContent = helperText(labor);
-  el('otherFixedHelper').textContent = helperText(otherFixed);
+  renderChart('cur',cur);
+  renderChart('sim',sim);
 
-  el('kpiSales').textContent = unitFormat(sales);
-  el('kpiSalesSub').textContent = formatJapanese(sales);
-  el('kpiMarginal').textContent = unitFormat(marginal);
-  el('kpiMarginalSub').textContent = `${formatJapanese(Math.abs(marginal))} ・ ${pct(marginalRate)}`;
-  el('kpiFixed').textContent = unitFormat(fixed);
-  el('kpiFixedSub').textContent = `${formatJapanese(fixed)} ・ 回収率 ${pct(fixedRecoveryRate)}`;
+  const salesPct=Number(el('simSalesPct').value);
+  const varRate=Number(el('simVariableRate').value);
+  const laborPct=Number(el('simLaborPct').value);
+  const otherPct=Number(el('simOtherPct').value);
 
-  const profitKpi = el('profitKpi');
-  profitKpi.classList.toggle('loss', isLoss);
-  profitKpi.classList.toggle('profit', !isLoss);
-  el('profitKpiLabel').textContent = isLoss ? '営業損失' : '営業利益';
-  el('kpiProfit').textContent = isLoss ? `▲${unitFormat(Math.abs(profit))}` : unitFormat(profit);
-  el('kpiProfitSub').textContent = `${isLoss?'▲':''}${formatJapanese(Math.abs(profit))} ・ ${pct(profitRate)}`;
-  el('kpiProfit').style.color = isLoss ? '#b91c1c' : '#15803d';
+  el('simScenarioBadge').textContent=`売上高${salesPct.toFixed(0)}%`;
+  el('simSalesPctLabel').textContent=`${unitMoney(sim.sales)}（${salesPct.toFixed(0)}%）`;
+  el('simVariableRateLabel').textContent=`${varRate.toFixed(1)}%`;
+  el('simLaborPctLabel').textContent=`${unitMoney(sim.labor)}（${laborPct.toFixed(0)}%）`;
+  el('simOtherPctLabel').textContent=`${unitMoney(sim.otherFixed)}（${otherPct.toFixed(0)}%）`;
 
-  el('salesBannerMain').textContent = unitFormat(sales);
-  el('salesBannerSub').textContent = `${formatJapanese(sales)} ・ 売上高100%`;
-  el('salesBannerRate').textContent = pct(marginalRate);
+  el('cmpSalesNow').textContent=unitMoney(cur.sales); el('cmpSalesSim').textContent=unitMoney(sim.sales); setDelta('cmpSalesDiff',sim.sales-cur.sales);
+  el('cmpVariableNow').textContent=unitMoney(cur.variable); el('cmpVariableSim').textContent=unitMoney(sim.variable); setDelta('cmpVariableDiff',sim.variable-cur.variable);
+  el('cmpMarginalNow').textContent=unitMoney(cur.marginal); el('cmpMarginalSim').textContent=unitMoney(sim.marginal); setDelta('cmpMarginalDiff',sim.marginal-cur.marginal);
+  el('cmpFixedNow').textContent=unitMoney(cur.fixed); el('cmpFixedSim').textContent=unitMoney(sim.fixed); setDelta('cmpFixedDiff',sim.fixed-cur.fixed);
+  el('cmpProfitNow').textContent=unitMoney(cur.profit); el('cmpProfitSim').textContent=unitMoney(sim.profit); setDelta('cmpProfitDiff',sim.profit-cur.profit);
+  el('cmpSafetyNow').textContent=pct(cur.safetyRate); el('cmpSafetySim').textContent=pct(sim.safetyRate); setPctDelta('cmpSafetyDiff',sim.safetyRate-cur.safetyRate);
 
-  const varWidth = sales > 0 ? Math.max(0, Math.min(100, variable / sales * 100)) : 0;
-  const marginWidth = Math.max(0, 100 - varWidth);
-  el('variableBlock').style.width = `${varWidth}%`;
-  el('marginSide').style.width = `${marginWidth}%`;
-  el('variableBlock').innerHTML = `<div>変動費<br>${formatJapanese(variable)}<small>${pct(variableRate)}</small></div>`;
-
-  const marginDen = Math.max(positiveMargin, 1);
-  const laborFlex = Math.max(recoveredLabor / marginDen, 0.02);
-  const fixedFlex = Math.max(recoveredOtherFixed / marginDen, 0.02);
-  const profitFlex = Math.max(Math.max(profit,0) / marginDen, 0.02);
-  el('laborBlock').style.flex = `${laborFlex} 1 0`;
-  el('fixedBlock').style.flex = `${fixedFlex} 1 0`;
-  el('profitBlock').style.flex = `${profitFlex} 1 0`;
-
-  el('laborBlock').innerHTML = `人件費<br>${formatJapanese(recoveredLabor)}<small>${sales>0?pct(recoveredLabor/sales):'—'}${unrecoveredLabor>0?'<br>（回収分）':''}</small>`;
-
-  if(isLoss){
-    el('fixedBlock').innerHTML = `その他固定費<br>回収分 ${formatJapanese(recoveredOtherFixed)}<small>${sales>0?pct(recoveredOtherFixed/sales):'—'}</small>`;
-    el('profitBlock').classList.add('hidden');
-    el('profitBlock').style.display = 'none';
-    el('profitBlock').style.flex = '0 0 0';
-    el('unrecoveredWrapper').classList.remove('hidden');
-    el('unrecoveredValue').textContent = `▲${formatJapanese(unrecoveredFixed)}`;
-    el('unrecoveredRate').textContent = sales>0 ? `-${(unrecoveredFixed/sales*100).toFixed(1)}%` : '—';
-    el('statusChip').textContent = '赤字';
-    el('statusChip').className = 'status-chip bad';
-  }else{
-    el('fixedBlock').innerHTML = `その他固定費<br>${formatJapanese(otherFixed)}<small>${sales>0?pct(otherFixed/sales):'—'}</small>`;
-    el('profitBlock').classList.remove('hidden');
-    el('profitBlock').style.display = 'flex';
-    el('profitBlock').style.flex = `${profitFlex} 1 0`;
-    el('profitBlock').classList.remove('loss-seg');
-    el('profitBlock').classList.add('profit-seg');
-    el('profitBlock').innerHTML = `利益<br>${formatJapanese(profit)}<small>${pct(profitRate)}</small>`;
-    el('unrecoveredWrapper').classList.add('hidden');
-    el('statusChip').textContent = '黒字';
-    el('statusChip').className = 'status-chip good';
-  }
-
-  // 損益分岐点バー：現在売上と損益分岐点の大きい方を基準に自動拡張
-  const maxBasis = Math.max(sales, Number.isFinite(breakEven) ? breakEven : 0, 1);
-  const scaleMax = maxBasis * 1.10;
-  const salesPos = Math.max(0, Math.min(100, sales / scaleMax * 100));
-  const breakPos = Number.isFinite(breakEven) ? Math.max(0, Math.min(100, breakEven / scaleMax * 100)) : 0;
-  el('salesMarker').style.left = `${salesPos}%`;
-  el('salesMarkerLabel').style.left = `${salesPos}%`;
-  el('breakMarker').style.left = `${breakPos}%`;
-  el('breakMarkerLabel').style.left = `${breakPos}%`;
-  el('scaleMaxLabel').textContent = unitFormat(scaleMax);
-
-  if(Number.isFinite(breakEven)){
-    el('breakEvenText').textContent = `損益分岐点 ${unitFormat(breakEven)}`;
-    if(sales >= breakEven){
-      el('safeZone').style.left = `${breakPos}%`;
-      el('safeZone').style.width = `${salesPos-breakPos}%`;
-      el('shortageZone').style.width = '0%';
-      el('barMessage').textContent = `安全余裕 ${formatJapanese(sales-breakEven)}`;
-      el('barMessage').className = 'bar-message good';
-    }else{
-      el('safeZone').style.width = '0%';
-      el('shortageZone').style.left = `${salesPos}%`;
-      el('shortageZone').style.width = `${breakPos-salesPos}%`;
-      el('barMessage').textContent = `損益分岐点まで あと ${formatJapanese(breakEven-sales)}`;
-      el('barMessage').className = 'bar-message bad';
-    }
-  }else{
-    el('breakEvenText').textContent = '損益分岐点 —';
-    el('safeZone').style.width = '0%';
-    el('shortageZone').style.width = '0%';
-    el('barMessage').textContent = '限界利益率が0以下のため損益分岐点を算出できません。';
-    el('barMessage').className = 'bar-message bad';
-  }
-
-  el('eqSales').textContent = unitFormat(sales);
-  el('eqVariable').textContent = unitFormat(variable);
-  el('eqMarginal').textContent = unitFormat(marginal);
-  el('eqMarginal2').textContent = unitFormat(marginal);
-  el('eqFixed').textContent = unitFormat(fixed);
-  el('eqProfitLabel').textContent = isLoss ? '営業損失' : '営業利益';
-  el('eqProfit').textContent = isLoss ? `▲${unitFormat(Math.abs(profit))}` : unitFormat(profit);
-
-  el('variableRate').textContent = pct(variableRate);
-  el('marginalRate').textContent = pct(marginalRate);
-  el('laborShare').textContent = pct(laborShare);
-  el('fixedRecoveryRate').textContent = pct(fixedRecoveryRate);
-  el('breakEven').textContent = Number.isFinite(breakEven) ? unitFormat(breakEven) : '—';
-  el('safetyRate').textContent = pct(safetyRate);
-
-  const gaugePct = Number.isFinite(safetyRate) ? Math.max(0, Math.min(100, safetyRate*100)) : 0;
-  el('gaugeFill').style.width = `${gaugePct}%`;
-  el('safetyGaugeText').textContent = pct(safetyRate);
-
-  const note = el('analysisNote');
-  if(isLoss){
-    note.classList.add('bad');
-    note.textContent = `限界利益 ${formatJapanese(positiveMargin)} では固定費 ${formatJapanese(fixed)} を全額回収できず、未回収固定費 ${formatJapanese(unrecoveredFixed)} が営業損失となっています。`;
-  }else{
+  const note=el('simComment');
+  if(sim.profit>=0){
     note.classList.remove('bad');
-    note.textContent = `限界利益で固定費を全額回収し、${formatJapanese(profit)} の営業利益が残っています。`;
+    note.textContent=`売上高を${salesPct.toFixed(0)}%にすると、営業利益は ${jpMoney(sim.profit)}。現在より ${jpMoney(Math.abs(sim.profit-cur.profit))} ${sim.profit>=cur.profit?'増加':'減少'}します。`;
+  }else{
+    note.classList.add('bad');
+    note.textContent=`この条件では営業損失 ${jpMoney(Math.abs(sim.profit))}。損益分岐点売上高は ${Number.isFinite(sim.breakEven)?jpMoney(sim.breakEven):'算出不可'} です。`;
   }
+}
+
+function resetSim(){
+  const cur=currentData();
+  el('simSalesPct').value='100';
+  el('simVariableRate').value=cur.sales>0?String((cur.variable/cur.sales*100).toFixed(1)):'0';
+  el('simLaborPct').value='100';
+  el('simOtherPct').value='100';
+  updateAll();
+}
+function setSales110(){
+  const cur=currentData();
+  el('simSalesPct').value='110';
+  el('simVariableRate').value=cur.sales>0?String((cur.variable/cur.sales*100).toFixed(1)):'0';
+  el('simLaborPct').value='100';
+  el('simOtherPct').value='100';
+  updateAll();
 }
 
 ['company','period','unit','sales','variableCost','laborCost','otherFixed'].forEach(id=>{
-  el(id).addEventListener('input',()=>{
-    update();
-    setSaving();
-  });
-  el(id).addEventListener('change',()=>{
-    update();
-    setSaving();
-  });
+  el(id).addEventListener('input',()=>{updateAll();scheduleSave();});
+  el(id).addEventListener('change',()=>{updateAll();scheduleSave();});
 });
-
 ['sales','variableCost','laborCost','otherFixed'].forEach(id=>{
   el(id).addEventListener('blur',()=>{
-    const n = parseJapaneseMoney(el(id).value);
-    el(id).value = n.toLocaleString('ja-JP');
-    update();
-    setSaving();
+    el(id).value=parseMoney(el(id).value).toLocaleString('ja-JP');
+    updateAll();scheduleSave();
   });
 });
+['simSalesPct','simVariableRate','simLaborPct','simOtherPct'].forEach(id=>el(id).addEventListener('input',updateAll));
+el('resetSimBtn').addEventListener('click',resetSim);
+el('sales110Btn').addEventListener('click',setSales110);
 
 el('sampleBtn').addEventListener('click',()=>{
-  el('company').value = '株式会社サンプル';
-  el('period').value = '2026年度';
-  el('unit').value = 'yen';
-  el('sales').value = '100000000';
-  el('variableCost').value = '60000000';
-  el('laborCost').value = '20000000';
-  el('otherFixed').value = '15000000';
-  update();
-  setSaving();
+  el('company').value='株式会社サンプル';el('period').value='2026年度';el('unit').value='yen';
+  el('sales').value='100000000';el('variableCost').value='60000000';el('laborCost').value='20000000';el('otherFixed').value='15000000';
+  setSales110();scheduleSave();
 });
-
 el('clearBtn').addEventListener('click',()=>{
-  if(!confirm('本当に入力内容をすべて削除しますか？')) return;
-  el('company').value = '';
-  el('period').value = '';
-  el('sales').value = '0';
-  el('variableCost').value = '0';
-  el('laborCost').value = '0';
-  el('otherFixed').value = '0';
-  update();
-  setSaving();
+  if(!confirm('本当に入力内容をすべて削除しますか？'))return;
+  el('company').value='';el('period').value='';el('sales').value='0';el('variableCost').value='0';el('laborCost').value='0';el('otherFixed').value='0';
+  resetSim();scheduleSave();
 });
 
-
-function getCurrentValues(){
-  return {
-    sales: parseJapaneseMoney(el('sales').value),
-    variable: parseJapaneseMoney(el('variableCost').value),
-    labor: parseJapaneseMoney(el('laborCost').value),
-    otherFixed: parseJapaneseMoney(el('otherFixed').value)
-  };
-}
-
-function formatSignedDelta(n){
-  if(Math.abs(n) < 0.5) return '±0円';
-  const sign = n > 0 ? '+' : '▲';
-  return `${sign}${formatJapanese(Math.abs(n))}`;
-}
-
-function setDeltaCell(id,n){
-  const node=el(id);
-  node.textContent=formatSignedDelta(n);
-  node.classList.remove('delta-plus','delta-minus');
-  if(n>0) node.classList.add('delta-plus');
-  if(n<0) node.classList.add('delta-minus');
-}
-
-function resetSimulation(){
-  const base=getCurrentValues();
-  el('simSalesPct').value='100';
-  el('simVariableRate').value=base.sales>0 ? String(Math.max(0,Math.min(100,(base.variable/base.sales)*100))) : '0';
-  el('simLaborPct').value='100';
-  el('simOtherPct').value='100';
-  updateSimulation();
-}
-
-function updateSimulation(){
-  try{
-    const base=getCurrentValues();
-
-    const salesRatio=Number(el('simSalesPct').value)/100;
-    const variableRate=Number(el('simVariableRate').value)/100;
-    const laborRatio=Number(el('simLaborPct').value)/100;
-    const otherRatio=Number(el('simOtherPct').value)/100;
-
-    const simSales=base.sales*salesRatio;
-    const simVariable=simSales*variableRate;
-    const simLabor=base.labor*laborRatio;
-    const simOtherFixed=base.otherFixed*otherRatio;
-    const simMarginal=simSales-simVariable;
-    const simFixed=simLabor+simOtherFixed;
-    const simProfit=simMarginal-simFixed;
-
-    const baseMarginal=base.sales-base.variable;
-    const baseFixed=base.labor+base.otherFixed;
-    const baseProfit=baseMarginal-baseFixed;
-
-    const simMarginalRate=simSales>0 ? simMarginal/simSales : NaN;
-    const simBreakEven=simMarginalRate>0 ? simFixed/simMarginalRate : NaN;
-    const simSafetyRate=simSales>0 && Number.isFinite(simBreakEven)
-      ? (simSales-simBreakEven)/simSales : NaN;
-
-    el('simSalesLabel').textContent=`${unitFormat(simSales)}（${Math.round(salesRatio*100)}%）`;
-    el('simVariableRateLabel').textContent=`${(variableRate*100).toFixed(1)}%`;
-    el('simLaborPctLabel').textContent=`${unitFormat(simLabor)}（${Math.round(laborRatio*100)}%）`;
-    el('simOtherPctLabel').textContent=`${unitFormat(simOtherFixed)}（${Math.round(otherRatio*100)}%）`;
-
-    el('simProfit').textContent=simProfit<0 ? `▲${formatJapanese(Math.abs(simProfit))}` : formatJapanese(simProfit);
-    el('simProfit').style.color=simProfit<0 ? '#b91c1c' : '#15803d';
-
-    setDeltaCell('simProfitDelta',simProfit-baseProfit);
-    el('simBreakEven').textContent=Number.isFinite(simBreakEven) ? formatJapanese(simBreakEven) : '—';
-    el('simSafetyRate').textContent=pct(simSafetyRate);
-
-    el('cmpSalesNow').textContent=formatJapanese(base.sales);
-    el('cmpSalesSim').textContent=formatJapanese(simSales);
-    setDeltaCell('cmpSalesDiff',simSales-base.sales);
-
-    el('cmpVariableNow').textContent=formatJapanese(base.variable);
-    el('cmpVariableSim').textContent=formatJapanese(simVariable);
-    setDeltaCell('cmpVariableDiff',simVariable-base.variable);
-
-    el('cmpMarginalNow').textContent=formatJapanese(baseMarginal);
-    el('cmpMarginalSim').textContent=formatJapanese(simMarginal);
-    setDeltaCell('cmpMarginalDiff',simMarginal-baseMarginal);
-
-    el('cmpFixedNow').textContent=formatJapanese(baseFixed);
-    el('cmpFixedSim').textContent=formatJapanese(simFixed);
-    setDeltaCell('cmpFixedDiff',simFixed-baseFixed);
-
-    el('cmpProfitNow').textContent=baseProfit<0 ? `▲${formatJapanese(Math.abs(baseProfit))}` : formatJapanese(baseProfit);
-    el('cmpProfitSim').textContent=simProfit<0 ? `▲${formatJapanese(Math.abs(simProfit))}` : formatJapanese(simProfit);
-    setDeltaCell('cmpProfitDiff',simProfit-baseProfit);
-
-    const note=el('simComment');
-    if(simProfit>=0){
-      note.classList.remove('bad');
-      const diff=simProfit-baseProfit;
-      note.textContent=`この条件では営業利益 ${formatJapanese(simProfit)}。現在と比べて ${formatJapanese(Math.abs(diff))} ${diff>=0?'改善':'悪化'}します。`;
-    }else{
-      note.classList.add('bad');
-      note.textContent=`この条件では営業損失 ${formatJapanese(Math.abs(simProfit))}。${Number.isFinite(simBreakEven)?`損益分岐点売上高は ${formatJapanese(simBreakEven)} です。`:'限界利益率が0以下のため損益分岐点を算出できません。'}`;
-    }
-  }catch(err){
-    const note=el('simComment');
-    if(note){
-      note.classList.add('bad');
-      note.textContent='シミュレーターの計算でエラーが発生しました。ページを再読み込みしてください。';
-    }
-    console.error(err);
-  }
-}
-
-['simSalesPct','simVariableRate','simLaborPct','simOtherPct'].forEach(id=>{
-  el(id).addEventListener('input',updateSimulation);
-});
-el('simResetBtn').addEventListener('click',resetSimulation);
-el('simRedTestBtn').addEventListener('click',()=>{
-  el('simSalesPct').value='90';
-  el('simVariableRate').value='66.7';
-  el('simLaborPct').value='100';
-  el('simOtherPct').value='100';
-  updateSimulation();
-});
-
-el('runtimeStatus').textContent = '✓ JavaScript動作中';
-el('runtimeStatus').style.background = '#dcfce7';
-el('runtimeStatus').style.color = '#166534';
+el('runtimeStatus').textContent='✓ JavaScript動作中';el('runtimeStatus').classList.add('ok');
 loadState();
-update();
-resetSimulation();
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));}
+setSales110();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+}
 </script>
 </body>
 </html>
