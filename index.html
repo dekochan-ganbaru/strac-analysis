@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>STRAC経営分析 Prototype 01-2</title>
+<meta name="theme-color" content="#1d4ed8" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="STRAC経営分析" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<style>
+  :root{
+    --bg:#f4f6f8;
+    --panel:#ffffff;
+    --text:#172033;
+    --muted:#6b7280;
+    --line:#d7dce3;
+    --blue:#1d4ed8;
+    --blue-soft:#dbeafe;
+    --cyan:#e0f2fe;
+    --gray:#e5e7eb;
+    --yellow:#fef3c7;
+    --orange:#fed7aa;
+    --green:#dcfce7;
+    --green-strong:#15803d;
+    --red:#fee2e2;
+    --red-strong:#b91c1c;
+    --shadow:0 10px 28px rgba(15,23,42,.07);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+
+  .app{
+    max-width:1480px;
+    margin:0 auto;
+    padding:18px;
+  }
+
+  header{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:16px;
+    align-items:end;
+    margin-bottom:14px;
+  }
+
+  h1{
+    margin:0;
+    font-size:clamp(24px,3vw,38px);
+    letter-spacing:.01em;
+  }
+
+  .subtitle{
+    margin-top:6px;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  .save-status{
+    font-weight:800;
+    font-size:14px;
+    padding:9px 12px;
+    border-radius:999px;
+    background:#eef2ff;
+    color:#3730a3;
+    white-space:nowrap;
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+  }
+
+  .top-meta{
+    display:grid;
+    grid-template-columns:1fr 1fr auto;
+    gap:12px;
+    padding:14px;
+    margin-bottom:14px;
+  }
+
+  .field label{
+    display:block;
+    font-weight:800;
+    font-size:13px;
+    margin-bottom:6px;
+    color:#374151;
+  }
+
+  input, select{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:16px;
+    background:#fff;
+    color:var(--text);
+  }
+
+  input:focus, select:focus{
+    outline:3px solid rgba(29,78,216,.12);
+    border-color:var(--blue);
+  }
+
+  .kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+    margin-bottom:14px;
+  }
+
+  .kpi{
+    padding:16px;
+    border:1px solid var(--line);
+    border-radius:18px;
+    background:#fff;
+    box-shadow:var(--shadow);
+  }
+
+  .kpi .label{
+    font-size:13px;
+    color:var(--muted);
+    font-weight:800;
+    margin-bottom:8px;
+  }
+
+  .kpi .main{
+    font-weight:900;
+    font-size:clamp(24px,2.6vw,38px);
+    line-height:1.05;
+  }
+
+  .kpi .sub{
+    margin-top:6px;
+    font-size:14px;
+    color:var(--muted);
+    font-weight:700;
+  }
+
+  .kpi.profit{border-color:#bbf7d0}
+  .kpi.loss{border-color:#fecaca}
+
+  .main-grid{
+    display:grid;
+    grid-template-columns:minmax(300px,390px) 1fr;
+    gap:14px;
+    align-items:start;
+  }
+
+  .input-panel{
+    padding:16px;
+    position:sticky;
+    top:12px;
+  }
+
+  .input-panel h2,.chart-panel h2,.metrics-panel h2{
+    margin:0 0 12px;
+    font-size:19px;
+  }
+
+  .money-row{
+    margin-bottom:14px;
+  }
+
+  .money-row .helper{
+    margin-top:5px;
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  .button-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:14px;
+  }
+
+  button{
+    border:0;
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:15px;
+    font-weight:900;
+    cursor:pointer;
+  }
+
+  .btn-primary{background:var(--blue); color:#fff}
+  .btn-secondary{background:#e5e7eb; color:#111827}
+  .btn-danger{background:#fff1f2; color:#be123c; border:1px solid #fecdd3}
+
+  .chart-panel{
+    padding:16px;
+  }
+
+  .chart-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+  }
+
+  .status-chip{
+    font-weight:900;
+    font-size:13px;
+    padding:7px 10px;
+    border-radius:999px;
+  }
+
+  .status-chip.good{background:var(--green);color:#166534}
+  .status-chip.bad{background:var(--red);color:#991b1b}
+
+  .sales-banner{
+    background:linear-gradient(135deg,#1e3a8a,#2563eb);
+    color:#fff;
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:10px;
+    display:flex;
+    align-items:end;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .sales-banner .name{
+    font-size:13px;
+    font-weight:900;
+    opacity:.9;
+  }
+
+  .sales-banner .value{
+    font-size:clamp(24px,3vw,40px);
+    font-weight:900;
+    line-height:1;
+  }
+
+  .sales-banner .sub{
+    font-size:13px;
+    opacity:.9;
+    margin-top:4px;
+  }
+
+  .strac{
+    min-height:390px;
+    border:2px solid #111827;
+    border-radius:14px;
+    overflow:hidden;
+    display:flex;
+    background:#fff;
+  }
+
+  .block{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:10px;
+    font-weight:900;
+    min-width:0;
+  }
+
+  .variable{
+    background:var(--gray);
+    border-right:2px solid #111827;
+  }
+
+  .margin-side{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+  }
+
+  .segment{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:8px;
+    font-weight:900;
+    border-bottom:2px solid #111827;
+    min-height:62px;
+  }
+
+  .segment:last-child{border-bottom:0}
+  .labor{background:var(--yellow)}
+  .fixed{background:var(--orange)}
+  .profit-seg{background:var(--green)}
+  .loss-seg{background:var(--red)}
+
+  .segment small,.block small{
+    display:block;
+    margin-top:4px;
+    font-size:12px;
+    font-weight:800;
+    color:#374151;
+  }
+
+  .breakeven-wrap{
+    margin-top:16px;
+  }
+
+  .breakeven-title{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:13px;
+    font-weight:800;
+    color:#475569;
+    margin-bottom:7px;
+    flex-wrap:wrap;
+  }
+
+  .bar{
+    position:relative;
+    height:22px;
+    border-radius:999px;
+    background:#e5e7eb;
+    overflow:hidden;
+    border:1px solid #cbd5e1;
+  }
+
+  .sales-fill{
+    position:absolute;
+    inset:0 auto 0 0;
+    width:100%;
+    background:#bfdbfe;
+  }
+
+  .break-line{
+    position:absolute;
+    top:-3px;
+    bottom:-3px;
+    width:4px;
+    background:#111827;
+    border-radius:999px;
+  }
+
+  .bar-labels{
+    margin-top:6px;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  .equation{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:8px;
+    margin-top:14px;
+  }
+
+  .eq-card{
+    border:1px solid var(--line);
+    background:#f8fafc;
+    border-radius:12px;
+    padding:10px;
+    text-align:center;
+  }
+
+  .eq-card .t{font-size:12px;color:var(--muted);font-weight:800}
+  .eq-card .v{font-size:16px;font-weight:900;margin-top:4px}
+  .eq-op{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    font-weight:900;
+    color:#64748b;
+  }
+
+  .metrics-panel{
+    margin-top:14px;
+    padding:16px;
+  }
+
+  .metrics-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .metric{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+    background:#fff;
+  }
+
+  .metric .k{
+    color:var(--muted);
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .metric .v{
+    margin-top:6px;
+    font-size:22px;
+    font-weight:900;
+  }
+
+  .note{
+    margin-top:12px;
+    border-radius:14px;
+    padding:13px 14px;
+    font-size:14px;
+    font-weight:800;
+    background:#eff6ff;
+    color:#1e3a8a;
+  }
+
+  .note.bad{
+    background:#fff1f2;
+    color:#9f1239;
+  }
+
+  .safety-gauge{
+    margin-top:12px;
+    display:grid;
+    grid-template-columns:160px 1fr;
+    gap:12px;
+    align-items:center;
+  }
+
+  .gauge-track{
+    height:16px;
+    background:#e5e7eb;
+    border-radius:999px;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .gauge-fill{
+    height:100%;
+    background:#93c5fd;
+    border-radius:999px;
+  }
+
+  .muted{color:var(--muted)}
+
+  @media (max-width:980px){
+    header{grid-template-columns:1fr}
+    .top-meta{grid-template-columns:1fr 1fr}
+    .top-meta .field:last-child{grid-column:1 / -1}
+    .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .main-grid{grid-template-columns:1fr}
+    .input-panel{position:static}
+  }
+
+  @media (max-width:620px){
+    .app{padding:10px}
+    .top-meta{grid-template-columns:1fr}
+    .top-meta .field:last-child{grid-column:auto}
+    .kpi-grid{grid-template-columns:1fr}
+    .metrics-grid{grid-template-columns:1fr}
+    .button-row{grid-template-columns:1fr}
+    .equation{grid-template-columns:1fr}
+    .eq-op{transform:rotate(90deg)}
+    .safety-gauge{grid-template-columns:1fr}
+    .strac{min-height:320px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div>
+      <h1>STRAC経営分析 Prototype 01-2</h1>
+      <div class="subtitle">金額の構造・損益分岐点・安全余裕を、ひと目で比較できる版です。</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="save-status" id="runtimeStatus">JavaScript確認中</div><div class="save-status" id="saveStatus">保存機能確認中</div></div>
+  </header>
+
+  <section class="panel top-meta">
+    <div class="field">
+      <label for="company">会社名</label>
+      <input id="company" value="株式会社サンプル">
+    </div>
+    <div class="field">
+      <label for="period">対象期間</label>
+      <input id="period" value="2026年度">
+    </div>
+    <div class="field">
+      <label for="unit">表示単位</label>
+      <select id="unit">
+        <option value="yen">円</option>
+        <option value="man">万円</option>
+        <option value="million">百万円</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="kpi-grid">
+    <div class="kpi">
+      <div class="label">売上高</div>
+      <div class="main" id="kpiSales"></div>
+      <div class="sub" id="kpiSalesSub"></div>
+    </div>
+    <div class="kpi">
+      <div class="label">限界利益</div>
+      <div class="main" id="kpiMarginal"></div>
+      <div class="sub" id="kpiMarginalSub"></div>
+    </div>
+    <div class="kpi">
+      <div class="label">固定費</div>
+      <div class="main" id="kpiFixed"></div>
+      <div class="sub" id="kpiFixedSub"></div>
+    </div>
+    <div class="kpi profit" id="profitKpi">
+      <div class="label" id="profitKpiLabel">営業利益</div>
+      <div class="main" id="kpiProfit"></div>
+      <div class="sub" id="kpiProfitSub"></div>
+    </div>
+  </section>
+
+  <section class="main-grid">
+    <div class="panel input-panel">
+      <h2>入力</h2>
+
+      <div class="money-row">
+        <div class="field">
+          <label for="sales">売上高</label>
+          <input id="sales" inputmode="text" value="100000000">
+          <div class="helper" id="salesHelper"></div>
+        </div>
+      </div>
+
+      <div class="money-row">
+        <div class="field">
+          <label for="variableCost">変動費</label>
+          <input id="variableCost" inputmode="text" value="60000000">
+          <div class="helper" id="variableHelper"></div>
+        </div>
+      </div>
+
+      <div class="money-row">
+        <div class="field">
+          <label for="laborCost">人件費</label>
+          <input id="laborCost" inputmode="text" value="20000000">
+          <div class="helper" id="laborHelper"></div>
+        </div>
+      </div>
+
+      <div class="money-row">
+        <div class="field">
+          <label for="otherFixed">その他固定費</label>
+          <input id="otherFixed" inputmode="text" value="15000000">
+          <div class="helper" id="otherFixedHelper"></div>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn-primary" id="sampleBtn">サンプル値に戻す</button>
+        <button class="btn-danger" id="clearBtn">入力をすべて削除</button>
+      </div>
+    </div>
+
+    <div>
+      <section class="panel chart-panel">
+        <div class="chart-head">
+          <h2>STRAC図</h2>
+          <div class="status-chip good" id="statusChip">黒字</div>
+        </div>
+
+        <div class="sales-banner">
+          <div>
+            <div class="name">売上高</div>
+            <div class="value" id="salesBannerMain"></div>
+            <div class="sub" id="salesBannerSub"></div>
+          </div>
+          <div style="text-align:right">
+            <div class="name">限界利益率</div>
+            <div style="font-size:26px;font-weight:900" id="salesBannerRate"></div>
+          </div>
+        </div>
+
+        <div class="strac">
+          <div class="block variable" id="variableBlock"></div>
+          <div class="margin-side" id="marginSide">
+            <div class="segment labor" id="laborBlock"></div>
+            <div class="segment fixed" id="fixedBlock"></div>
+            <div class="segment profit-seg" id="profitBlock"></div>
+          </div>
+        </div>
+
+        <div class="breakeven-wrap">
+          <div class="breakeven-title">
+            <span>損益分岐点バー</span>
+            <span id="breakEvenText"></span>
+          </div>
+          <div class="bar">
+            <div class="sales-fill"></div>
+            <div class="break-line" id="breakLine"></div>
+          </div>
+          <div class="bar-labels">
+            <span>0</span>
+            <span id="salesEndLabel"></span>
+          </div>
+        </div>
+
+        <div class="equation">
+          <div class="eq-card">
+            <div class="t">売上高</div>
+            <div class="v" id="eqSales"></div>
+          </div>
+          <div class="eq-op">−</div>
+          <div class="eq-card">
+            <div class="t">変動費</div>
+            <div class="v" id="eqVariable"></div>
+          </div>
+          <div class="eq-op">＝</div>
+          <div class="eq-card">
+            <div class="t">限界利益</div>
+            <div class="v" id="eqMarginal"></div>
+          </div>
+        </div>
+
+        <div class="equation" style="grid-template-columns:repeat(5,minmax(0,1fr))">
+          <div class="eq-card">
+            <div class="t">限界利益</div>
+            <div class="v" id="eqMarginal2"></div>
+          </div>
+          <div class="eq-op">−</div>
+          <div class="eq-card">
+            <div class="t">固定費</div>
+            <div class="v" id="eqFixed"></div>
+          </div>
+          <div class="eq-op">＝</div>
+          <div class="eq-card">
+            <div class="t" id="eqProfitLabel">営業利益</div>
+            <div class="v" id="eqProfit"></div>
+          </div>
+        </div>
+
+        <div class="note" id="analysisNote"></div>
+      </section>
+
+      <section class="panel metrics-panel">
+        <h2>経営指標</h2>
+        <div class="metrics-grid">
+          <div class="metric"><div class="k">変動費率</div><div class="v" id="variableRate"></div></div>
+          <div class="metric"><div class="k">限界利益率</div><div class="v" id="marginalRate"></div></div>
+          <div class="metric"><div class="k">労働分配率</div><div class="v" id="laborShare"></div></div>
+          <div class="metric"><div class="k">営業利益率</div><div class="v" id="profitRate"></div></div>
+          <div class="metric"><div class="k">損益分岐点売上高</div><div class="v" id="breakEven"></div></div>
+          <div class="metric"><div class="k">安全余裕率</div><div class="v" id="safetyRate"></div></div>
+        </div>
+
+        <div class="safety-gauge">
+          <div>
+            <div style="font-size:13px;font-weight:800;color:#64748b">安全余裕ゲージ</div>
+            <div style="font-size:22px;font-weight:900;margin-top:4px" id="safetyGaugeText"></div>
+          </div>
+          <div>
+            <div class="gauge-track">
+              <div class="gauge-fill" id="gaugeFill"></div>
+            </div>
+            <div class="muted" style="font-size:12px;margin-top:5px">売上が損益分岐点をどれだけ上回っているかを示します。</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+</div>
+
+<script>
+const STORAGE_KEY = 'strac-prototype-01-2-v1';
+
+const el = id => document.getElementById(id);
+
+function parseJapaneseMoney(input){
+  if(input === null || input === undefined) return 0;
+  let s = String(input).trim().replace(/,/g,'').replace(/円/g,'');
+  if(!s) return 0;
+
+  let total = 0;
+  let matched = false;
+
+  const oku = s.match(/(-?\d+(?:\.\d+)?)\s*億/);
+  if(oku){ total += parseFloat(oku[1]) * 100000000; matched = true; }
+
+  const man = s.match(/(-?\d+(?:\.\d+)?)\s*万/);
+  if(man){ total += parseFloat(man[1]) * 10000; matched = true; }
+
+  if(matched){
+    const tail = s.replace(/-?\d+(?:\.\d+)?\s*億/,'').replace(/-?\d+(?:\.\d+)?\s*万/,'').trim();
+    if(tail && /^-?\d+(?:\.\d+)?$/.test(tail)) total += parseFloat(tail);
+    return Math.max(0, Math.round(total));
+  }
+
+  const n = Number(s.replace(/[^\d.-]/g,''));
+  return Math.max(0, Math.round(Number.isFinite(n) ? n : 0));
+}
+
+function formatExactYen(n){
+  return `${Math.round(n).toLocaleString('ja-JP')}円`;
+}
+
+function formatJapanese(n){
+  n = Math.round(n);
+  if(n >= 100000000){
+    const oku = Math.floor(n / 100000000);
+    const rest = n % 100000000;
+    const man = Math.floor(rest / 10000);
+    if(man > 0) return `${oku}億${man.toLocaleString('ja-JP')}万円`;
+    return `${oku}億円`;
+  }
+  if(n >= 10000){
+    return `${Math.round(n/10000).toLocaleString('ja-JP')}万円`;
+  }
+  return `${n.toLocaleString('ja-JP')}円`;
+}
+
+function unitFormat(n){
+  const unit = el('unit').value;
+  if(unit === 'man') return `${(n/10000).toLocaleString('ja-JP',{maximumFractionDigits:1})}万円`;
+  if(unit === 'million') return `${(n/1000000).toLocaleString('ja-JP',{maximumFractionDigits:1})}百万円`;
+  return formatExactYen(n);
+}
+
+function pct(v){
+  return Number.isFinite(v) ? `${(v*100).toFixed(1)}%` : '—';
+}
+
+function setSaving(){
+  if(!storageAvailable()){
+    el('saveStatus').textContent = '自動保存不可';
+    return;
+  }
+  el('saveStatus').textContent = '保存中…';
+  clearTimeout(window.__saveTimer);
+  window.__saveTimer = setTimeout(() => {
+    saveState();
+  }, 250);
+}
+
+function storageAvailable(){
+  try{
+    const k = '__strac_test__';
+    localStorage.setItem(k,'1');
+    localStorage.removeItem(k);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function saveState(){
+  if(!storageAvailable()){
+    el('saveStatus').textContent = '自動保存不可';
+    return;
+  }
+  try{
+    const data = {
+      company: el('company').value,
+      period: el('period').value,
+      unit: el('unit').value,
+      sales: el('sales').value,
+      variableCost: el('variableCost').value,
+      laborCost: el('laborCost').value,
+      otherFixed: el('otherFixed').value
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    el('saveStatus').textContent = '✓ 保存済み';
+  }catch(e){
+    el('saveStatus').textContent = '自動保存不可';
+  }
+}
+
+function loadState(){
+  if(!storageAvailable()){
+    el('saveStatus').textContent = '自動保存不可';
+    return;
+  }
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw){
+      el('saveStatus').textContent = '✓ 保存準備OK';
+      return;
+    }
+    const d = JSON.parse(raw);
+    Object.entries(d).forEach(([k,v])=>{
+      if(el(k)) el(k).value = v;
+    });
+    el('saveStatus').textContent = '✓ 保存済み';
+  }catch(e){
+    el('saveStatus').textContent = '自動保存不可';
+  }
+}
+
+function helperText(n){
+  return `${formatExactYen(n)} ＝ ${formatJapanese(n)}`;
+}
+
+function update(){
+  const sales = parseJapaneseMoney(el('sales').value);
+  const variable = parseJapaneseMoney(el('variableCost').value);
+  const labor = parseJapaneseMoney(el('laborCost').value);
+  const otherFixed = parseJapaneseMoney(el('otherFixed').value);
+
+  const marginal = sales - variable;
+  const fixed = labor + otherFixed;
+  const profit = marginal - fixed;
+
+  const variableRate = sales > 0 ? variable / sales : NaN;
+  const marginalRate = sales > 0 ? marginal / sales : NaN;
+  const laborShare = marginal > 0 ? labor / marginal : NaN;
+  const profitRate = sales > 0 ? profit / sales : NaN;
+  const breakEven = marginalRate > 0 ? fixed / marginalRate : NaN;
+  const safetyAmount = Number.isFinite(breakEven) ? sales - breakEven : NaN;
+  const safetyRate = sales > 0 && Number.isFinite(safetyAmount) ? safetyAmount / sales : NaN;
+
+  el('salesHelper').textContent = helperText(sales);
+  el('variableHelper').textContent = helperText(variable);
+  el('laborHelper').textContent = helperText(labor);
+  el('otherFixedHelper').textContent = helperText(otherFixed);
+
+  el('kpiSales').textContent = unitFormat(sales);
+  el('kpiSalesSub').textContent = formatJapanese(sales);
+
+  el('kpiMarginal').textContent = unitFormat(marginal);
+  el('kpiMarginalSub').textContent = `${formatJapanese(marginal)} ・ ${pct(marginalRate)}`;
+
+  el('kpiFixed').textContent = unitFormat(fixed);
+  el('kpiFixedSub').textContent = formatJapanese(fixed);
+
+  const profitKpi = el('profitKpi');
+  profitKpi.classList.toggle('loss', profit < 0);
+  profitKpi.classList.toggle('profit', profit >= 0);
+  el('profitKpiLabel').textContent = profit >= 0 ? '営業利益' : '営業損失';
+  el('kpiProfit').textContent = unitFormat(profit);
+  el('kpiProfitSub').textContent = `${formatJapanese(Math.abs(profit))} ・ ${pct(profitRate)}`;
+  el('kpiProfit').style.color = profit >= 0 ? '#15803d' : '#b91c1c';
+
+  el('salesBannerMain').textContent = unitFormat(sales);
+  el('salesBannerSub').textContent = `${formatJapanese(sales)} ・ 売上高100%`;
+  el('salesBannerRate').textContent = pct(marginalRate);
+
+  const varWidth = sales > 0 ? Math.max(0, Math.min(100, (variable/sales)*100)) : 0;
+  const marginWidth = Math.max(0, 100 - varWidth);
+  el('variableBlock').style.width = `${varWidth}%`;
+  el('marginSide').style.width = `${marginWidth}%`;
+
+  el('variableBlock').innerHTML = `
+    <div>
+      変動費<br>${formatJapanese(variable)}
+      <small>${pct(variableRate)}</small>
+    </div>`;
+
+  const denom = Math.max(Math.abs(marginal), labor + otherFixed + Math.abs(profit), 1);
+  const laborFlex = Math.max(12, (labor/denom)*100);
+  const fixedFlex = Math.max(12, (otherFixed/denom)*100);
+  const profitFlex = Math.max(12, (Math.abs(profit)/denom)*100);
+
+  el('laborBlock').style.flex = `${laborFlex} 1 0`;
+  el('fixedBlock').style.flex = `${fixedFlex} 1 0`;
+  el('profitBlock').style.flex = `${profitFlex} 1 0`;
+
+  el('laborBlock').innerHTML = `人件費<br>${formatJapanese(labor)}<small>${sales>0 ? pct(labor/sales) : '—'}</small>`;
+  el('fixedBlock').innerHTML = `その他固定費<br>${formatJapanese(otherFixed)}<small>${sales>0 ? pct(otherFixed/sales) : '—'}</small>`;
+
+  el('profitBlock').classList.toggle('loss-seg', profit < 0);
+  el('profitBlock').classList.toggle('profit-seg', profit >= 0);
+  el('profitBlock').innerHTML = `${profit >= 0 ? '利益' : '損失'}<br>${formatJapanese(Math.abs(profit))}<small>${pct(profitRate)}</small>`;
+
+  el('statusChip').textContent = profit >= 0 ? '黒字' : '赤字';
+  el('statusChip').className = `status-chip ${profit >= 0 ? 'good' : 'bad'}`;
+
+  const breakPct = sales > 0 && Number.isFinite(breakEven) ? Math.max(0, Math.min(100, (breakEven/sales)*100)) : 0;
+  el('breakLine').style.left = `calc(${breakPct}% - 2px)`;
+  el('breakEvenText').textContent = Number.isFinite(breakEven)
+    ? `損益分岐点 ${unitFormat(breakEven)}`
+    : '損益分岐点 —';
+  el('salesEndLabel').textContent = unitFormat(sales);
+
+  el('eqSales').textContent = unitFormat(sales);
+  el('eqVariable').textContent = unitFormat(variable);
+  el('eqMarginal').textContent = unitFormat(marginal);
+  el('eqMarginal2').textContent = unitFormat(marginal);
+  el('eqFixed').textContent = unitFormat(fixed);
+  el('eqProfitLabel').textContent = profit >= 0 ? '営業利益' : '営業損失';
+  el('eqProfit').textContent = unitFormat(profit);
+
+  el('variableRate').textContent = pct(variableRate);
+  el('marginalRate').textContent = pct(marginalRate);
+  el('laborShare').textContent = pct(laborShare);
+  el('profitRate').textContent = pct(profitRate);
+  el('breakEven').textContent = Number.isFinite(breakEven) ? unitFormat(breakEven) : '—';
+  el('safetyRate').textContent = pct(safetyRate);
+
+  const gaugePct = Number.isFinite(safetyRate) ? Math.max(0, Math.min(100, safetyRate*100)) : 0;
+  el('gaugeFill').style.width = `${gaugePct}%`;
+  el('safetyGaugeText').textContent = pct(safetyRate);
+
+  const note = el('analysisNote');
+  if(profit >= 0 && Number.isFinite(safetyAmount)){
+    note.classList.remove('bad');
+    note.textContent = `現在の売上高は損益分岐点を ${formatJapanese(Math.max(0,safetyAmount))} 上回っています。`;
+  }else if(Number.isFinite(breakEven)){
+    note.classList.add('bad');
+    note.textContent = `損益分岐点まで、あと ${formatJapanese(Math.max(0,breakEven-sales))} の売上が必要です。`;
+  }else{
+    note.classList.add('bad');
+    note.textContent = '限界利益率が0以下のため、現在の費用構造では損益分岐点を算出できません。';
+  }
+}
+
+['company','period','unit','sales','variableCost','laborCost','otherFixed'].forEach(id=>{
+  el(id).addEventListener('input',()=>{
+    update();
+    setSaving();
+  });
+  el(id).addEventListener('change',()=>{
+    update();
+    setSaving();
+  });
+});
+
+['sales','variableCost','laborCost','otherFixed'].forEach(id=>{
+  el(id).addEventListener('blur',()=>{
+    const n = parseJapaneseMoney(el(id).value);
+    el(id).value = n.toLocaleString('ja-JP');
+    update();
+    setSaving();
+  });
+});
+
+el('sampleBtn').addEventListener('click',()=>{
+  el('company').value = '株式会社サンプル';
+  el('period').value = '2026年度';
+  el('unit').value = 'yen';
+  el('sales').value = '100000000';
+  el('variableCost').value = '60000000';
+  el('laborCost').value = '20000000';
+  el('otherFixed').value = '15000000';
+  update();
+  setSaving();
+});
+
+el('clearBtn').addEventListener('click',()=>{
+  if(!confirm('本当に入力内容をすべて削除しますか？')) return;
+  el('company').value = '';
+  el('period').value = '';
+  el('sales').value = '0';
+  el('variableCost').value = '0';
+  el('laborCost').value = '0';
+  el('otherFixed').value = '0';
+  update();
+  setSaving();
+});
+
+el('runtimeStatus').textContent = '✓ JavaScript動作中';
+el('runtimeStatus').style.background = '#dcfce7';
+el('runtimeStatus').style.color = '#166534';
+loadState();
+update();
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(()=>{})); }
+</script>
+</body>
+</html>
