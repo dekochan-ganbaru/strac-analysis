@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#1d4ed8" />
 <link rel="manifest" href="manifest.webmanifest" />
-<title>STRAC経営分析 Prototype 02-2</title>
+<title>STRAC経営分析 Prototype 02-2.1</title>
 <style>
 :root{
   --bg:#f4f6f8; --panel:#fff; --text:#172033; --muted:#6b7280; --line:#d7dce3;
@@ -105,8 +105,8 @@ input[type="range"]{width:100%;padding:0;border:0}
 
 <header>
   <div>
-    <h1>STRAC経営分析 Prototype 02-2</h1>
-    <div class="subtitle">現在のSTRAC図と「もしも」のSTRAC図を横に並べて、利益構造の変化を比較します。</div>
+    <h1>STRAC経営分析 Prototype 02-2.1</h1>
+    <div class="subtitle">現在と「もしも」のSTRAC図を横並びで比較し、右側ブロックと主要指標を確実に連動表示します。</div>
   </div>
   <div class="status-row">
     <div class="pill" id="runtimeStatus">JavaScript確認中</div>
@@ -145,7 +145,7 @@ input[type="range"]{width:100%;padding:0;border:0}
           <div class="marginal-header"><span>限界利益</span><span id="curMarginalHeader"></span></div>
           <div class="segment labor" id="curLabor"></div>
           <div class="segment fixed" id="curFixed"></div>
-          <div class="segment profit" id="curProfit"></div>
+          <div class="segment profit" id="curProfitBlock"></div>
         </div>
       </div>
       <div class="loss-box-wrap hidden" id="curLossWrap">
@@ -248,8 +248,15 @@ input[type="range"]{width:100%;padding:0;border:0}
 </div>
 
 <script>
-const STORAGE_KEY='strac-prototype-02-2-v1';
+const STORAGE_KEY='strac-prototype-02-2-1-v1';
 const el=id=>document.getElementById(id);
+
+function mustEl(id){
+  const node=document.getElementById(id);
+  if(!node) throw new Error(`Missing element: ${id}`);
+  return node;
+}
+
 
 function parseMoney(input){
   let s=String(input??'').trim().replace(/,/g,'').replace(/円/g,'');
@@ -337,19 +344,23 @@ function renderChart(prefix,d){
 
   el(prefix+'Labor').style.flex=`${laborFlex} 1 0`;
   el(prefix+'Fixed').style.flex=`${fixedFlex} 1 0`;
-  el(prefix+'Profit').style.flex=`${profitFlex} 1 0`;
+  el(prefix+'ProfitBlock').style.flex=`${profitFlex} 1 0`;
 
   el(prefix+'Labor').innerHTML=`人件費<br>${jpMoney(d.recoveredLabor)}<small>${d.sales>0?pct(d.recoveredLabor/d.sales):'—'}</small>`;
 
   if(d.profit<0){
     el(prefix+'Fixed').innerHTML=`その他固定費<br>回収分 ${jpMoney(d.recoveredOther)}<small>${d.sales>0?pct(d.recoveredOther/d.sales):'—'}</small>`;
-    el(prefix+'Profit').classList.add('hidden');
+    el(prefix+'ProfitBlock').classList.add('hidden');
+    el(prefix+'ProfitBlock').style.display='none';
+    el(prefix+'ProfitBlock').style.flex='0 0 0';
     el(prefix+'LossWrap').classList.remove('hidden');
     el(prefix+'LossValue').textContent=`▲${jpMoney(d.unrecovered)}`;
   }else{
     el(prefix+'Fixed').innerHTML=`その他固定費<br>${jpMoney(d.otherFixed)}<small>${d.sales>0?pct(d.otherFixed/d.sales):'—'}</small>`;
-    el(prefix+'Profit').classList.remove('hidden');
-    el(prefix+'Profit').innerHTML=`営業利益<br>${jpMoney(d.profit)}<small>${d.sales>0?pct(d.profit/d.sales):'—'}</small>`;
+    el(prefix+'ProfitBlock').classList.remove('hidden');
+    el(prefix+'ProfitBlock').style.display='flex';
+    el(prefix+'ProfitBlock').style.flex=`${profitFlex} 1 0`;
+    el(prefix+'ProfitBlock').innerHTML=`営業利益<br>${jpMoney(d.profit)}<small>${d.sales>0?pct(d.profit/d.sales):'—'}</small>`;
     el(prefix+'LossWrap').classList.add('hidden');
   }
 
