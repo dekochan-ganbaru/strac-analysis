@@ -3,12 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>STRAC経営分析 Prototype 01-2</title>
-<meta name="theme-color" content="#1d4ed8" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="STRAC経営分析" />
-<link rel="manifest" href="./manifest.webmanifest" />
+<title>STRAC経営分析 Prototype 01-3</title>
 <style>
   :root{
     --bg:#f4f6f8;
@@ -450,6 +445,23 @@
 
   .muted{color:var(--muted)}
 
+
+  .unrecovered-wrapper{width:34%;margin-left:auto;margin-top:8px;text-align:center}
+  .unrecovered-wrapper.hidden{display:none!important}
+  .connector{font-size:27px;font-weight:900;color:#ef4444;line-height:1}
+  .unrecovered-box{background:#fee2e2;border:2px solid #ef4444;border-radius:12px;padding:12px;color:#991b1b}
+  .unrecovered-box .small-label{font-size:12px;font-weight:900;margin-bottom:3px}
+  #unrecoveredValue{font-size:28px;font-weight:900;margin:4px 0}
+  .loss-label{font-size:13px;font-weight:900}
+  .scale-bar{position:relative;height:28px;border-radius:999px;background:#e5e7eb;border:1px solid #cbd5e1;overflow:visible;margin-top:28px}
+  .range-zone{position:absolute;top:0;bottom:0;border-radius:999px}
+  .range-zone.safe{background:#bbf7d0}.range-zone.shortage{background:#fecaca}
+  .scale-marker{position:absolute;top:-10px;width:3px;height:48px;border-radius:999px;transform:translateX(-1.5px)}
+  .scale-marker.sales{background:#2563eb}.scale-marker.break{background:#dc2626}
+  .scale-marker-label{position:absolute;top:-28px;transform:translateX(-50%);font-size:11px;font-weight:900;white-space:nowrap}
+  .scale-marker-label.sales{color:#1d4ed8}.scale-marker-label.break{color:#b91c1c}
+  .bar-message{margin-top:8px;font-weight:900;font-size:13px}.bar-message.good{color:#166534}.bar-message.bad{color:#b91c1c}
+
   @media (max-width:980px){
     header{grid-template-columns:1fr}
     .top-meta{grid-template-columns:1fr 1fr}
@@ -470,6 +482,7 @@
     .eq-op{transform:rotate(90deg)}
     .safety-gauge{grid-template-columns:1fr}
     .strac{min-height:320px}
+    .unrecovered-wrapper{width:100%}
   }
 </style>
 </head>
@@ -478,8 +491,8 @@
 
   <header>
     <div>
-      <h1>STRAC経営分析 Prototype 01-2</h1>
-      <div class="subtitle">金額の構造・損益分岐点・安全余裕を、ひと目で比較できる版です。</div>
+      <h1>STRAC経営分析 Prototype 01-3</h1>
+      <div class="subtitle">赤字時は「未回収固定費」を図外に分離し、利益構造をより正確に表示します。</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><div class="save-status" id="runtimeStatus">JavaScript確認中</div><div class="save-status" id="saveStatus">保存機能確認中</div></div>
   </header>
@@ -596,19 +609,32 @@
           </div>
         </div>
 
+        <div class="unrecovered-wrapper hidden" id="unrecoveredWrapper">
+          <div class="connector">↓</div>
+          <div class="unrecovered-box">
+            <div class="small-label">不足</div>
+            <strong>未回収固定費</strong>
+            <div id="unrecoveredValue"></div>
+            <div id="unrecoveredRate"></div>
+            <div class="loss-label">＝ 営業損失</div>
+          </div>
+        </div>
+
         <div class="breakeven-wrap">
           <div class="breakeven-title">
             <span>損益分岐点バー</span>
             <span id="breakEvenText"></span>
           </div>
-          <div class="bar">
-            <div class="sales-fill"></div>
-            <div class="break-line" id="breakLine"></div>
+          <div class="scale-bar">
+            <div class="range-zone safe" id="safeZone"></div>
+            <div class="range-zone shortage" id="shortageZone"></div>
+            <div class="scale-marker sales" id="salesMarker"></div>
+            <div class="scale-marker break" id="breakMarker"></div>
+            <div class="scale-marker-label sales" id="salesMarkerLabel">現在売上</div>
+            <div class="scale-marker-label break" id="breakMarkerLabel">損益分岐点</div>
           </div>
-          <div class="bar-labels">
-            <span>0</span>
-            <span id="salesEndLabel"></span>
-          </div>
+          <div class="bar-labels"><span>0</span><span id="scaleMaxLabel"></span></div>
+          <div class="bar-message good" id="barMessage"></div>
         </div>
 
         <div class="equation">
@@ -654,7 +680,7 @@
           <div class="metric"><div class="k">変動費率</div><div class="v" id="variableRate"></div></div>
           <div class="metric"><div class="k">限界利益率</div><div class="v" id="marginalRate"></div></div>
           <div class="metric"><div class="k">労働分配率</div><div class="v" id="laborShare"></div></div>
-          <div class="metric"><div class="k">営業利益率</div><div class="v" id="profitRate"></div></div>
+          <div class="metric"><div class="k">固定費回収率</div><div class="v" id="fixedRecoveryRate"></div></div>
           <div class="metric"><div class="k">損益分岐点売上高</div><div class="v" id="breakEven"></div></div>
           <div class="metric"><div class="k">安全余裕率</div><div class="v" id="safetyRate"></div></div>
         </div>
@@ -677,7 +703,7 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'strac-prototype-01-2-v1';
+const STORAGE_KEY = 'strac-prototype-01-3-v1';
 
 const el = id => document.getElementById(id);
 
@@ -814,6 +840,7 @@ function update(){
   const marginal = sales - variable;
   const fixed = labor + otherFixed;
   const profit = marginal - fixed;
+  const isLoss = profit < 0;
 
   const variableRate = sales > 0 ? variable / sales : NaN;
   const marginalRate = sales > 0 ? marginal / sales : NaN;
@@ -823,6 +850,15 @@ function update(){
   const safetyAmount = Number.isFinite(breakEven) ? sales - breakEven : NaN;
   const safetyRate = sales > 0 && Number.isFinite(safetyAmount) ? safetyAmount / sales : NaN;
 
+  const positiveMargin = Math.max(0, marginal);
+  const recoveredLabor = Math.min(labor, positiveMargin);
+  const remainingAfterLabor = Math.max(0, positiveMargin - recoveredLabor);
+  const recoveredOtherFixed = Math.min(otherFixed, remainingAfterLabor);
+  const unrecoveredLabor = Math.max(0, labor - recoveredLabor);
+  const unrecoveredOtherFixed = Math.max(0, otherFixed - recoveredOtherFixed);
+  const unrecoveredFixed = unrecoveredLabor + unrecoveredOtherFixed;
+  const fixedRecoveryRate = fixed > 0 ? Math.min(positiveMargin / fixed, 1) : 1;
+
   el('salesHelper').textContent = helperText(sales);
   el('variableHelper').textContent = helperText(variable);
   el('laborHelper').textContent = helperText(labor);
@@ -830,74 +866,104 @@ function update(){
 
   el('kpiSales').textContent = unitFormat(sales);
   el('kpiSalesSub').textContent = formatJapanese(sales);
-
   el('kpiMarginal').textContent = unitFormat(marginal);
-  el('kpiMarginalSub').textContent = `${formatJapanese(marginal)} ・ ${pct(marginalRate)}`;
-
+  el('kpiMarginalSub').textContent = `${formatJapanese(Math.abs(marginal))} ・ ${pct(marginalRate)}`;
   el('kpiFixed').textContent = unitFormat(fixed);
-  el('kpiFixedSub').textContent = formatJapanese(fixed);
+  el('kpiFixedSub').textContent = `${formatJapanese(fixed)} ・ 回収率 ${pct(fixedRecoveryRate)}`;
 
   const profitKpi = el('profitKpi');
-  profitKpi.classList.toggle('loss', profit < 0);
-  profitKpi.classList.toggle('profit', profit >= 0);
-  el('profitKpiLabel').textContent = profit >= 0 ? '営業利益' : '営業損失';
-  el('kpiProfit').textContent = unitFormat(profit);
-  el('kpiProfitSub').textContent = `${formatJapanese(Math.abs(profit))} ・ ${pct(profitRate)}`;
-  el('kpiProfit').style.color = profit >= 0 ? '#15803d' : '#b91c1c';
+  profitKpi.classList.toggle('loss', isLoss);
+  profitKpi.classList.toggle('profit', !isLoss);
+  el('profitKpiLabel').textContent = isLoss ? '営業損失' : '営業利益';
+  el('kpiProfit').textContent = isLoss ? `▲${unitFormat(Math.abs(profit))}` : unitFormat(profit);
+  el('kpiProfitSub').textContent = `${isLoss?'▲':''}${formatJapanese(Math.abs(profit))} ・ ${pct(profitRate)}`;
+  el('kpiProfit').style.color = isLoss ? '#b91c1c' : '#15803d';
 
   el('salesBannerMain').textContent = unitFormat(sales);
   el('salesBannerSub').textContent = `${formatJapanese(sales)} ・ 売上高100%`;
   el('salesBannerRate').textContent = pct(marginalRate);
 
-  const varWidth = sales > 0 ? Math.max(0, Math.min(100, (variable/sales)*100)) : 0;
+  const varWidth = sales > 0 ? Math.max(0, Math.min(100, variable / sales * 100)) : 0;
   const marginWidth = Math.max(0, 100 - varWidth);
   el('variableBlock').style.width = `${varWidth}%`;
   el('marginSide').style.width = `${marginWidth}%`;
+  el('variableBlock').innerHTML = `<div>変動費<br>${formatJapanese(variable)}<small>${pct(variableRate)}</small></div>`;
 
-  el('variableBlock').innerHTML = `
-    <div>
-      変動費<br>${formatJapanese(variable)}
-      <small>${pct(variableRate)}</small>
-    </div>`;
-
-  const denom = Math.max(Math.abs(marginal), labor + otherFixed + Math.abs(profit), 1);
-  const laborFlex = Math.max(12, (labor/denom)*100);
-  const fixedFlex = Math.max(12, (otherFixed/denom)*100);
-  const profitFlex = Math.max(12, (Math.abs(profit)/denom)*100);
-
+  const marginDen = Math.max(positiveMargin, 1);
+  const laborFlex = Math.max(recoveredLabor / marginDen, 0.02);
+  const fixedFlex = Math.max(recoveredOtherFixed / marginDen, 0.02);
+  const profitFlex = Math.max(Math.max(profit,0) / marginDen, 0.02);
   el('laborBlock').style.flex = `${laborFlex} 1 0`;
   el('fixedBlock').style.flex = `${fixedFlex} 1 0`;
   el('profitBlock').style.flex = `${profitFlex} 1 0`;
 
-  el('laborBlock').innerHTML = `人件費<br>${formatJapanese(labor)}<small>${sales>0 ? pct(labor/sales) : '—'}</small>`;
-  el('fixedBlock').innerHTML = `その他固定費<br>${formatJapanese(otherFixed)}<small>${sales>0 ? pct(otherFixed/sales) : '—'}</small>`;
+  el('laborBlock').innerHTML = `人件費<br>${formatJapanese(recoveredLabor)}<small>${sales>0?pct(recoveredLabor/sales):'—'}${unrecoveredLabor>0?'<br>（回収分）':''}</small>`;
 
-  el('profitBlock').classList.toggle('loss-seg', profit < 0);
-  el('profitBlock').classList.toggle('profit-seg', profit >= 0);
-  el('profitBlock').innerHTML = `${profit >= 0 ? '利益' : '損失'}<br>${formatJapanese(Math.abs(profit))}<small>${pct(profitRate)}</small>`;
+  if(isLoss){
+    el('fixedBlock').innerHTML = `その他固定費<br>回収分 ${formatJapanese(recoveredOtherFixed)}<small>${sales>0?pct(recoveredOtherFixed/sales):'—'}</small>`;
+    el('profitBlock').classList.add('hidden');
+    el('unrecoveredWrapper').classList.remove('hidden');
+    el('unrecoveredValue').textContent = `▲${formatJapanese(unrecoveredFixed)}`;
+    el('unrecoveredRate').textContent = sales>0 ? `-${(unrecoveredFixed/sales*100).toFixed(1)}%` : '—';
+    el('statusChip').textContent = '赤字';
+    el('statusChip').className = 'status-chip bad';
+  }else{
+    el('fixedBlock').innerHTML = `その他固定費<br>${formatJapanese(otherFixed)}<small>${sales>0?pct(otherFixed/sales):'—'}</small>`;
+    el('profitBlock').classList.remove('hidden');
+    el('profitBlock').classList.remove('loss-seg');
+    el('profitBlock').classList.add('profit-seg');
+    el('profitBlock').innerHTML = `利益<br>${formatJapanese(profit)}<small>${pct(profitRate)}</small>`;
+    el('unrecoveredWrapper').classList.add('hidden');
+    el('statusChip').textContent = '黒字';
+    el('statusChip').className = 'status-chip good';
+  }
 
-  el('statusChip').textContent = profit >= 0 ? '黒字' : '赤字';
-  el('statusChip').className = `status-chip ${profit >= 0 ? 'good' : 'bad'}`;
+  // 損益分岐点バー：現在売上と損益分岐点の大きい方を基準に自動拡張
+  const maxBasis = Math.max(sales, Number.isFinite(breakEven) ? breakEven : 0, 1);
+  const scaleMax = maxBasis * 1.10;
+  const salesPos = Math.max(0, Math.min(100, sales / scaleMax * 100));
+  const breakPos = Number.isFinite(breakEven) ? Math.max(0, Math.min(100, breakEven / scaleMax * 100)) : 0;
+  el('salesMarker').style.left = `${salesPos}%`;
+  el('salesMarkerLabel').style.left = `${salesPos}%`;
+  el('breakMarker').style.left = `${breakPos}%`;
+  el('breakMarkerLabel').style.left = `${breakPos}%`;
+  el('scaleMaxLabel').textContent = unitFormat(scaleMax);
 
-  const breakPct = sales > 0 && Number.isFinite(breakEven) ? Math.max(0, Math.min(100, (breakEven/sales)*100)) : 0;
-  el('breakLine').style.left = `calc(${breakPct}% - 2px)`;
-  el('breakEvenText').textContent = Number.isFinite(breakEven)
-    ? `損益分岐点 ${unitFormat(breakEven)}`
-    : '損益分岐点 —';
-  el('salesEndLabel').textContent = unitFormat(sales);
+  if(Number.isFinite(breakEven)){
+    el('breakEvenText').textContent = `損益分岐点 ${unitFormat(breakEven)}`;
+    if(sales >= breakEven){
+      el('safeZone').style.left = `${breakPos}%`;
+      el('safeZone').style.width = `${salesPos-breakPos}%`;
+      el('shortageZone').style.width = '0%';
+      el('barMessage').textContent = `安全余裕 ${formatJapanese(sales-breakEven)}`;
+      el('barMessage').className = 'bar-message good';
+    }else{
+      el('safeZone').style.width = '0%';
+      el('shortageZone').style.left = `${salesPos}%`;
+      el('shortageZone').style.width = `${breakPos-salesPos}%`;
+      el('barMessage').textContent = `損益分岐点まで あと ${formatJapanese(breakEven-sales)}`;
+      el('barMessage').className = 'bar-message bad';
+    }
+  }else{
+    el('breakEvenText').textContent = '損益分岐点 —';
+    el('safeZone').style.width = '0%';
+    el('shortageZone').style.width = '0%';
+    el('barMessage').textContent = '限界利益率が0以下のため損益分岐点を算出できません。';
+    el('barMessage').className = 'bar-message bad';
+  }
 
   el('eqSales').textContent = unitFormat(sales);
   el('eqVariable').textContent = unitFormat(variable);
   el('eqMarginal').textContent = unitFormat(marginal);
   el('eqMarginal2').textContent = unitFormat(marginal);
   el('eqFixed').textContent = unitFormat(fixed);
-  el('eqProfitLabel').textContent = profit >= 0 ? '営業利益' : '営業損失';
-  el('eqProfit').textContent = unitFormat(profit);
+  el('eqProfitLabel').textContent = isLoss ? '営業損失' : '営業利益';
+  el('eqProfit').textContent = isLoss ? `▲${unitFormat(Math.abs(profit))}` : unitFormat(profit);
 
   el('variableRate').textContent = pct(variableRate);
   el('marginalRate').textContent = pct(marginalRate);
   el('laborShare').textContent = pct(laborShare);
-  el('profitRate').textContent = pct(profitRate);
+  el('fixedRecoveryRate').textContent = pct(fixedRecoveryRate);
   el('breakEven').textContent = Number.isFinite(breakEven) ? unitFormat(breakEven) : '—';
   el('safetyRate').textContent = pct(safetyRate);
 
@@ -906,15 +972,12 @@ function update(){
   el('safetyGaugeText').textContent = pct(safetyRate);
 
   const note = el('analysisNote');
-  if(profit >= 0 && Number.isFinite(safetyAmount)){
-    note.classList.remove('bad');
-    note.textContent = `現在の売上高は損益分岐点を ${formatJapanese(Math.max(0,safetyAmount))} 上回っています。`;
-  }else if(Number.isFinite(breakEven)){
+  if(isLoss){
     note.classList.add('bad');
-    note.textContent = `損益分岐点まで、あと ${formatJapanese(Math.max(0,breakEven-sales))} の売上が必要です。`;
+    note.textContent = `限界利益 ${formatJapanese(positiveMargin)} では固定費 ${formatJapanese(fixed)} を全額回収できず、未回収固定費 ${formatJapanese(unrecoveredFixed)} が営業損失となっています。`;
   }else{
-    note.classList.add('bad');
-    note.textContent = '限界利益率が0以下のため、現在の費用構造では損益分岐点を算出できません。';
+    note.classList.remove('bad');
+    note.textContent = `限界利益で固定費を全額回収し、${formatJapanese(profit)} の営業利益が残っています。`;
   }
 }
 
@@ -967,7 +1030,7 @@ el('runtimeStatus').style.background = '#dcfce7';
 el('runtimeStatus').style.color = '#166534';
 loadState();
 update();
-if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(()=>{})); }
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));}
 </script>
 </body>
 </html>
