@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#1d4ed8" />
 <link rel="manifest" href="manifest.webmanifest" />
-<title>STRAC経営分析 Prototype 02-2.1</title>
+<title>STRAC経営分析 Prototype 02-2.2</title>
 <style>
 :root{
   --bg:#f4f6f8; --panel:#fff; --text:#172033; --muted:#6b7280; --line:#d7dce3;
@@ -42,7 +42,7 @@ button{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:
 .chart-card{padding:14px}
 .chart-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
 .chart-head h2{margin:0;font-size:20px}
-.chart-badge{font-size:12px;font-weight:900;padding:7px 10px;border-radius:999px;background:#eef2ff;color:#3730a3}
+.chart-badge{font-size:12px;font-weight:900;padding:7px 10px;border-radius:14px;background:#eef2ff;color:#3730a3;max-width:65%;white-space:normal;line-height:1.35;text-align:right}
 .chart-badge.sim{background:#dcfce7;color:#166534}
 .sales-banner{
   background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border-radius:14px;
@@ -105,8 +105,8 @@ input[type="range"]{width:100%;padding:0;border:0}
 
 <header>
   <div>
-    <h1>STRAC経営分析 Prototype 02-2.1</h1>
-    <div class="subtitle">現在と「もしも」のSTRAC図を横並びで比較し、右側ブロックと主要指標を確実に連動表示します。</div>
+    <h1>STRAC経営分析 Prototype 02-2.2</h1>
+    <div class="subtitle">現在と「もしも」のSTRAC図を比較し、現在のシミュレーション条件を右上ラベルと説明文に自動反映します。</div>
   </div>
   <div class="status-row">
     <div class="pill" id="runtimeStatus">JavaScript確認中</div>
@@ -161,7 +161,7 @@ input[type="range"]{width:100%;padding:0;border:0}
     </section>
 
     <section class="panel chart-card">
-      <div class="chart-head"><h2>もしものSTRAC図</h2><span class="chart-badge sim" id="simScenarioBadge">売上高110%</span></div>
+      <div class="chart-head"><h2>もしものSTRAC図</h2><span class="chart-badge sim" id="simScenarioBadge">もしも条件：売上高110%</span></div>
       <div class="sales-banner">
         <div><div class="sales-name">売上高</div><div class="sales-value" id="simSalesMain"></div><div class="sales-sub" id="simSalesSub"></div></div>
         <div><div class="sales-name">限界利益率</div><div class="rate-value" id="simMarginalRateTop"></div></div>
@@ -229,6 +229,7 @@ input[type="range"]{width:100%;padding:0;border:0}
 
     <div class="sim-card">
       <h3>主要指標の比較</h3>
+      <div class="note" id="simActiveConditions" style="margin-top:0;margin-bottom:10px;background:#f0fdf4;color:#166534"></div>
       <table class="compare-table">
         <thead><tr><th>項目</th><th>現在</th><th>もしも</th><th>差</th></tr></thead>
         <tbody>
@@ -248,7 +249,7 @@ input[type="range"]{width:100%;padding:0;border:0}
 </div>
 
 <script>
-const STORAGE_KEY='strac-prototype-02-2-1-v1';
+const STORAGE_KEY='strac-prototype-02-2-2-v1';
 const el=id=>document.getElementById(id);
 
 function mustEl(id){
@@ -411,6 +412,43 @@ function setPctDelta(id,n){
   if(n<0)node.classList.add('delta-minus');
 }
 
+
+function buildScenarioConditionText(){
+  const cur=currentData();
+
+  const salesPct=Number(el('simSalesPct').value);
+  const variableRate=Number(el('simVariableRate').value);
+  const laborPct=Number(el('simLaborPct').value);
+  const otherPct=Number(el('simOtherPct').value);
+
+  const currentVariableRate = cur.sales > 0 ? (cur.variable / cur.sales) * 100 : 0;
+
+  const conditions=[];
+
+  if(Math.abs(salesPct-100) >= 0.05){
+    conditions.push(`売上高${salesPct.toFixed(0)}%`);
+  }
+
+  if(Math.abs(variableRate-currentVariableRate) >= 0.05){
+    conditions.push(`変動費率${variableRate.toFixed(1)}%`);
+  }
+
+  if(Math.abs(laborPct-100) >= 0.05){
+    conditions.push(`人件費${laborPct.toFixed(0)}%`);
+  }
+
+  if(Math.abs(otherPct-100) >= 0.05){
+    conditions.push(`その他固定費${otherPct.toFixed(0)}%`);
+  }
+
+  return conditions.length ? conditions.join('・') : '現在値と同じ';
+}
+
+function buildScenarioBadgeText(){
+  return `もしも条件：${buildScenarioConditionText()}`;
+}
+
+
 function updateAll(){
   const cur=currentData();
   const sim=scenarioData();
@@ -428,7 +466,8 @@ function updateAll(){
   const laborPct=Number(el('simLaborPct').value);
   const otherPct=Number(el('simOtherPct').value);
 
-  el('simScenarioBadge').textContent=`売上高${salesPct.toFixed(0)}%`;
+  el('simScenarioBadge').textContent=buildScenarioBadgeText();
+  el('simActiveConditions').textContent=`現在のシミュレーション条件：${buildScenarioConditionText()}`;
   el('simSalesPctLabel').textContent=`${unitMoney(sim.sales)}（${salesPct.toFixed(0)}%）`;
   el('simVariableRateLabel').textContent=`${varRate.toFixed(1)}%`;
   el('simLaborPctLabel').textContent=`${unitMoney(sim.labor)}（${laborPct.toFixed(0)}%）`;
@@ -442,12 +481,23 @@ function updateAll(){
   el('cmpSafetyNow').textContent=pct(cur.safetyRate); el('cmpSafetySim').textContent=pct(sim.safetyRate); setPctDelta('cmpSafetyDiff',sim.safetyRate-cur.safetyRate);
 
   const note=el('simComment');
+  const conditionText=buildScenarioConditionText();
+
   if(sim.profit>=0){
     note.classList.remove('bad');
-    note.textContent=`売上高を${salesPct.toFixed(0)}%にすると、営業利益は ${jpMoney(sim.profit)}。現在より ${jpMoney(Math.abs(sim.profit-cur.profit))} ${sim.profit>=cur.profit?'増加':'減少'}します。`;
+    const diff=sim.profit-cur.profit;
+    if(conditionText==='現在値と同じ'){
+      note.textContent=`現在値と同じ条件です。営業利益は ${jpMoney(sim.profit)} です。`;
+    }else{
+      note.textContent=`${conditionText}の場合、営業利益は ${jpMoney(sim.profit)}。現在より ${jpMoney(Math.abs(diff))} ${diff>=0?'増加':'減少'}します。`;
+    }
   }else{
     note.classList.add('bad');
-    note.textContent=`この条件では営業損失 ${jpMoney(Math.abs(sim.profit))}。損益分岐点売上高は ${Number.isFinite(sim.breakEven)?jpMoney(sim.breakEven):'算出不可'} です。`;
+    if(conditionText==='現在値と同じ'){
+      note.textContent=`現在値と同じ条件で、営業損失は ${jpMoney(Math.abs(sim.profit))} です。`;
+    }else{
+      note.textContent=`${conditionText}の場合、営業損失は ${jpMoney(Math.abs(sim.profit))}。損益分岐点売上高は ${Number.isFinite(sim.breakEven)?jpMoney(sim.breakEven):'算出不可'} です。`;
+    }
   }
 }
 
