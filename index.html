@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#1d4ed8" />
 <link rel="manifest" href="manifest.webmanifest" />
-<title>STRAC経営分析 Prototype 02-2.3</title>
+<title>STRAC経営分析 Prototype 02-2.4</title>
 <style>
 :root{
   --bg:#f4f6f8; --panel:#fff; --text:#172033; --muted:#6b7280; --line:#d7dce3;
@@ -84,7 +84,7 @@ input[type="range"]{width:100%;padding:0;border:0}
 .compare-table th,.compare-table td{padding:9px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 .compare-table th:first-child,.compare-table td:first-child{text-align:left}
 .compare-table th{color:var(--muted);font-size:12px}
-.delta-plus{color:#15803d;font-weight:900}.delta-minus{color:#b91c1c;font-weight:900}
+.delta-plus{color:#15803d;font-weight:900}.delta-minus{color:#b91c1c;font-weight:900}.delta-neutral{color:#475569;font-weight:900}
 .note{margin-top:12px;border-radius:14px;padding:13px 14px;font-size:14px;font-weight:800;background:#eff6ff;color:#1e3a8a}
 .note.bad{background:#fff1f2;color:#9f1239}
 @media(max-width:1180px){
@@ -105,8 +105,8 @@ input[type="range"]{width:100%;padding:0;border:0}
 
 <header>
   <div>
-    <h1>STRAC経営分析 Prototype 02-2.3</h1>
-    <div class="subtitle">現在と「もしも」のSTRAC図を比較し、シミュレーション操作はスライダーに統一します。</div>
+    <h1>STRAC経営分析 Prototype 02-2.4</h1>
+    <div class="subtitle">現在と「もしも」のSTRAC図を比較し、比較表の増減を経営上の改善／悪化で色分けします。</div>
   </div>
   <div class="status-row">
     <div class="pill" id="runtimeStatus">JavaScript確認中</div>
@@ -242,6 +242,7 @@ input[type="range"]{width:100%;padding:0;border:0}
         </tbody>
       </table>
       <div class="note" id="simComment"></div>
+      <div class="helper" style="margin-top:8px">色の意味：緑＝経営上の改善、赤＝悪化、グレー＝単純な増減で良否を判定しない項目です。</div>
     </div>
   </div>
 </section>
@@ -249,7 +250,7 @@ input[type="range"]{width:100%;padding:0;border:0}
 </div>
 
 <script>
-const STORAGE_KEY='strac-prototype-02-2-3-v1';
+const STORAGE_KEY='strac-prototype-02-2-4-v1';
 const el=id=>document.getElementById(id);
 
 function mustEl(id){
@@ -397,19 +398,64 @@ function signedMoney(n){
   if(Math.abs(n)<0.5)return '±0円';
   return `${n>0?'+':'▲'}${jpMoney(Math.abs(n))}`;
 }
-function setDelta(id,n){
-  const node=el(id);
-  node.textContent=signedMoney(n);
-  node.classList.remove('delta-plus','delta-minus');
-  if(n>0)node.classList.add('delta-plus');
-  if(n<0)node.classList.add('delta-minus');
+
+function setDeltaStyle(node,state){
+  node.classList.remove('delta-plus','delta-minus','delta-neutral');
+  if(state==='good') node.classList.add('delta-plus');
+  else if(state==='bad') node.classList.add('delta-minus');
+  else node.classList.add('delta-neutral');
 }
-function setPctDelta(id,n){
+
+function setDelta(id,n,meaning='neutral'){
   const node=el(id);
-  node.textContent=Number.isFinite(n)?`${n>0?'+':''}${(n*100).toFixed(1)}pt`:'—';
-  node.classList.remove('delta-plus','delta-minus');
-  if(n>0)node.classList.add('delta-plus');
-  if(n<0)node.classList.add('delta-minus');
+  if(Math.abs(n)<0.5){
+    node.textContent='±0円';
+    setDeltaStyle(node,'neutral');
+    return;
+  }
+
+  // Text
+  if(meaning==='cost'){
+    node.textContent = n < 0
+      ? `${jpMoney(Math.abs(n))}削減`
+      : `+${jpMoney(n)}`;
+  }else{
+    node.textContent = signedMoney(n);
+  }
+
+  // Color by business meaning
+  let state='neutral';
+  if(meaning==='benefit'){
+    state = n > 0 ? 'good' : 'bad';
+  }else if(meaning==='cost'){
+    state = n < 0 ? 'good' : 'bad';
+  }else if(meaning==='sales'){
+    state = n > 0 ? 'good' : 'bad';
+  }else if(meaning==='variable_cost'){
+    // Variable cost alone is context-dependent; keep neutral.
+    state='neutral';
+  }
+
+  setDeltaStyle(node,state);
+}
+
+function setPctDelta(id,n,meaning='benefit'){
+  const node=el(id);
+  if(!Number.isFinite(n)){
+    node.textContent='—';
+    setDeltaStyle(node,'neutral');
+    return;
+  }
+  if(Math.abs(n)<0.0005){
+    node.textContent='±0.0pt';
+    setDeltaStyle(node,'neutral');
+    return;
+  }
+  node.textContent=`${n>0?'+':''}${(n*100).toFixed(1)}pt`;
+
+  let state='neutral';
+  if(meaning==='benefit') state = n>0 ? 'good' : 'bad';
+  setDeltaStyle(node,state);
 }
 
 
@@ -473,12 +519,12 @@ function updateAll(){
   el('simLaborPctLabel').textContent=`${unitMoney(sim.labor)}（${laborPct.toFixed(0)}%）`;
   el('simOtherPctLabel').textContent=`${unitMoney(sim.otherFixed)}（${otherPct.toFixed(0)}%）`;
 
-  el('cmpSalesNow').textContent=unitMoney(cur.sales); el('cmpSalesSim').textContent=unitMoney(sim.sales); setDelta('cmpSalesDiff',sim.sales-cur.sales);
-  el('cmpVariableNow').textContent=unitMoney(cur.variable); el('cmpVariableSim').textContent=unitMoney(sim.variable); setDelta('cmpVariableDiff',sim.variable-cur.variable);
-  el('cmpMarginalNow').textContent=unitMoney(cur.marginal); el('cmpMarginalSim').textContent=unitMoney(sim.marginal); setDelta('cmpMarginalDiff',sim.marginal-cur.marginal);
-  el('cmpFixedNow').textContent=unitMoney(cur.fixed); el('cmpFixedSim').textContent=unitMoney(sim.fixed); setDelta('cmpFixedDiff',sim.fixed-cur.fixed);
-  el('cmpProfitNow').textContent=unitMoney(cur.profit); el('cmpProfitSim').textContent=unitMoney(sim.profit); setDelta('cmpProfitDiff',sim.profit-cur.profit);
-  el('cmpSafetyNow').textContent=pct(cur.safetyRate); el('cmpSafetySim').textContent=pct(sim.safetyRate); setPctDelta('cmpSafetyDiff',sim.safetyRate-cur.safetyRate);
+  el('cmpSalesNow').textContent=unitMoney(cur.sales); el('cmpSalesSim').textContent=unitMoney(sim.sales); setDelta('cmpSalesDiff',sim.sales-cur.sales,'sales');
+  el('cmpVariableNow').textContent=unitMoney(cur.variable); el('cmpVariableSim').textContent=unitMoney(sim.variable); setDelta('cmpVariableDiff',sim.variable-cur.variable,'variable_cost');
+  el('cmpMarginalNow').textContent=unitMoney(cur.marginal); el('cmpMarginalSim').textContent=unitMoney(sim.marginal); setDelta('cmpMarginalDiff',sim.marginal-cur.marginal,'benefit');
+  el('cmpFixedNow').textContent=unitMoney(cur.fixed); el('cmpFixedSim').textContent=unitMoney(sim.fixed); setDelta('cmpFixedDiff',sim.fixed-cur.fixed,'cost');
+  el('cmpProfitNow').textContent=unitMoney(cur.profit); el('cmpProfitSim').textContent=unitMoney(sim.profit); setDelta('cmpProfitDiff',sim.profit-cur.profit,'benefit');
+  el('cmpSafetyNow').textContent=pct(cur.safetyRate); el('cmpSafetySim').textContent=pct(sim.safetyRate); setPctDelta('cmpSafetyDiff',sim.safetyRate-cur.safetyRate,'benefit');
 
   const note=el('simComment');
   const conditionText=buildScenarioConditionText();
