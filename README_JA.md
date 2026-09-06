@@ -1,17 +1,20 @@
-# STRAC経営分析 Prototype 01-3.1
+# STRAC経営分析 Prototype 02
 
-## 変更点
-- 赤字時の未回収固定費をSTRAC図の外側に表示
-- 固定費回収率を追加
-- 損益分岐点バーを自動スケール化
-- 黒字は緑、赤字は赤で対称表示
+## 追加機能
+- もしも経営シミュレーター
+- 売上高を現在値の割合で変更
+- 変動費率をスライダーで変更
+- 人件費・その他固定費を現在値比で変更
+- 営業利益・利益差・損益分岐点・安全余裕率をリアルタイム計算
+- 現在値とシミュレーション値の比較表
+- 赤字テストボタン
+- 現在値に戻すボタン
 
-## 更新
-既存の GitHub リポジトリ strac-analysis へ index.html / manifest.webmanifest / service-worker.js を上書きアップロードしてください。
+## GitHub Pages更新
+既存の `strac-analysis` リポジトリに、次の3ファイルを上書きしてください。
 
+- index.html
+- manifest.webmanifest
+- service-worker.js
 
-## 01-3.1 小修正
-- 赤字時の緑色「利益」ブロックを完全非表示に修正
-- CSSの汎用 `.hidden` を追加
-- JavaScriptでも `display:none` と `flex:0` を明示してSafari上で確実に非表示
-- service workerのキャッシュ名を更新
+README_JA.md は任意です。
