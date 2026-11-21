@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#1d4ed8" />
 <link rel="manifest" href="manifest.webmanifest" />
-<title>STRAC経営分析 Prototype 02-2.4</title>
+<title>STRAC経営分析 Prototype 02-2.5</title>
 <style>
 :root{
   --bg:#f4f6f8; --panel:#fff; --text:#172033; --muted:#6b7280; --line:#d7dce3;
@@ -79,6 +79,8 @@ button{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:
 .sim-row-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;align-items:center}
 .sim-row-name{font-size:13px;font-weight:900}.sim-row-value{font-size:16px;font-weight:900}
 input[type="range"]{width:100%;padding:0;border:0}
+.sim-money{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:13px}
+.sim-money input{flex:1;min-width:0}
 .sim-actions{display:flex;gap:8px;flex-wrap:wrap}
 .compare-table{width:100%;border-collapse:collapse}
 .compare-table th,.compare-table td{padding:9px 7px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
@@ -105,7 +107,7 @@ input[type="range"]{width:100%;padding:0;border:0}
 
 <header>
   <div>
-    <h1>STRAC経営分析 Prototype 02-2.4</h1>
+    <h1>STRAC経営分析 Prototype 02-2.5</h1>
     <div class="subtitle">現在と「もしも」のSTRAC図を比較し、比較表の増減を経営上の改善／悪化で色分けします。</div>
   </div>
   <div class="status-row">
@@ -207,24 +209,33 @@ input[type="range"]{width:100%;padding:0;border:0}
 
       <div class="sim-row">
         <div class="sim-row-top"><span class="sim-row-name">売上高</span><span class="sim-row-value" id="simSalesPctLabel"></span></div>
-        <input type="range" id="simSalesPct" min="50" max="150" step="1" value="110">
+        <input type="range" id="simSalesPct" aria-label="現在売上高に対する割合" min="50" max="150" step="1" value="110">
         <div class="helper">現在売上高の50〜150%</div>
+        <label class="sim-money">金額 <input id="simSalesAmount" type="text" inputmode="decimal" aria-label="もしもの売上高の金額"> 円</label>
       </div>
 
       <div class="sim-row">
-        <div class="sim-row-top"><span class="sim-row-name">変動費率</span><span class="sim-row-value" id="simVariableRateLabel"></span></div>
-        <input type="range" id="simVariableRate" min="0" max="100" step="0.1" value="60">
+        <div class="sim-row-top"><span class="sim-row-name">変動費</span><span class="sim-row-value" id="simVariableRateLabel"></span></div>
+        <select id="simVariableMode" aria-label="変動費の指定方法">
+          <option value="rate">比率で指定</option>
+          <option value="amount">金額で指定</option>
+        </select>
+        <input type="range" id="simVariableRate" aria-label="変動費率" min="0" max="100" step="0.1" value="60">
+        <label class="sim-money">金額 <input id="simVariableAmount" type="text" inputmode="decimal" aria-label="もしもの変動費の金額" readonly> 円</label>
       </div>
 
       <div class="sim-row">
         <div class="sim-row-top"><span class="sim-row-name">人件費</span><span class="sim-row-value" id="simLaborPctLabel"></span></div>
-        <input type="range" id="simLaborPct" min="50" max="150" step="1" value="100">
+        <input type="range" id="simLaborPct" aria-label="現在人件費に対する割合" min="50" max="150" step="1" value="100">
+        <label class="sim-money">金額 <input id="simLaborAmount" type="text" inputmode="decimal" aria-label="もしもの人件費の金額"> 円</label>
       </div>
 
       <div class="sim-row">
         <div class="sim-row-top"><span class="sim-row-name">その他固定費</span><span class="sim-row-value" id="simOtherPctLabel"></span></div>
-        <input type="range" id="simOtherPct" min="50" max="150" step="1" value="100">
+        <input type="range" id="simOtherPct" aria-label="現在その他固定費に対する割合" min="50" max="150" step="1" value="100">
+        <label class="sim-money">金額 <input id="simOtherAmount" type="text" inputmode="decimal" aria-label="もしものその他固定費の金額"> 円</label>
       </div>
+      <div class="helper">スライダーで指定できる範囲外の金額も入力できます。</div>
     </div>
 
     <div class="sim-card">
@@ -380,18 +391,25 @@ function currentData(){
     parseMoney(el('otherFixed').value)
   );
 }
-function scenarioData(){
-  const b=currentData();
-  const salesPct=Number(el('simSalesPct').value)/100;
-  const variableRate=Number(el('simVariableRate').value)/100;
-  const laborPct=Number(el('simLaborPct').value)/100;
-  const otherPct=Number(el('simOtherPct').value)/100;
-  return calcData(
-    b.sales*salesPct,
-    b.sales*salesPct*variableRate,
-    b.labor*laborPct,
-    b.otherFixed*otherPct
+const scenarioAmounts=[
+  {key:'sales',label:'売上高',slider:el('simSalesPct'),input:el('simSalesAmount'),amount:null},
+  {key:'labor',label:'人件費',slider:el('simLaborPct'),input:el('simLaborAmount'),amount:null},
+  {key:'otherFixed',label:'その他固定費',slider:el('simOtherPct'),input:el('simOtherAmount'),amount:null}
+];
+const variableMode=el('simVariableMode');
+const variableSlider=el('simVariableRate');
+const variableInput=el('simVariableAmount');
+let variableAmount=0;
+let variableRate=null;
+
+function scenarioData(current){
+  const [sales,labor,otherFixed]=scenarioAmounts.map(({key,slider,amount})=>
+    amount??current[key]*(Number(slider.value)/100)
   );
+  const variable=variableMode.value==='amount'
+    ? variableAmount
+    : sales*(variableRate??Number(variableSlider.value)/100);
+  return calcData(sales,variable,labor,otherFixed);
 }
 
 function signedMoney(n){
@@ -459,45 +477,33 @@ function setPctDelta(id,n,meaning='benefit'){
 }
 
 
-function buildScenarioConditionText(){
-  const cur=currentData();
-
-  const salesPct=Number(el('simSalesPct').value);
-  const variableRate=Number(el('simVariableRate').value);
-  const laborPct=Number(el('simLaborPct').value);
-  const otherPct=Number(el('simOtherPct').value);
-
-  const currentVariableRate = cur.sales > 0 ? (cur.variable / cur.sales) * 100 : 0;
-
+function buildScenarioConditionText(cur,sim){
   const conditions=[];
 
-  if(Math.abs(salesPct-100) >= 0.05){
-    conditions.push(`売上高${salesPct.toFixed(0)}%`);
+  for(const {key,label,amount,slider} of scenarioAmounts){
+    if(amount!==null && amount!==cur[key]){
+      conditions.push(`${label}${unitMoney(amount)}`);
+    }else if(amount===null && Number(slider.value)!==100 && cur[key]!==0){
+      conditions.push(`${label}${slider.value}%`);
+    }
+
   }
 
-  if(Math.abs(variableRate-currentVariableRate) >= 0.05){
-    conditions.push(`変動費率${variableRate.toFixed(1)}%`);
+  let variableCondition='';
+  if(variableMode.value==='amount' && sim.variable!==cur.variable){
+    variableCondition=`変動費${unitMoney(sim.variable)}`;
+  }else if(variableMode.value==='rate' &&
+           Math.abs(sim.variableRate-(cur.sales>0?cur.variableRate:0))>=0.0005){
+    variableCondition=`変動費率${pct(sim.variableRate)}`;
   }
-
-  if(Math.abs(laborPct-100) >= 0.05){
-    conditions.push(`人件費${laborPct.toFixed(0)}%`);
-  }
-
-  if(Math.abs(otherPct-100) >= 0.05){
-    conditions.push(`その他固定費${otherPct.toFixed(0)}%`);
-  }
+  if(variableCondition) conditions.push(variableCondition);
 
   return conditions.length ? conditions.join('・') : '現在値と同じ';
 }
 
-function buildScenarioBadgeText(){
-  return `もしも条件：${buildScenarioConditionText()}`;
-}
-
-
 function updateAll(){
   const cur=currentData();
-  const sim=scenarioData();
+  const sim=scenarioData(cur);
 
   el('salesHelper').textContent=helper(cur.sales);
   el('variableHelper').textContent=helper(cur.variable);
@@ -507,17 +513,31 @@ function updateAll(){
   renderChart('cur',cur);
   renderChart('sim',sim);
 
-  const salesPct=Number(el('simSalesPct').value);
-  const varRate=Number(el('simVariableRate').value);
-  const laborPct=Number(el('simLaborPct').value);
-  const otherPct=Number(el('simOtherPct').value);
+  for(const {key,slider,input,amount} of scenarioAmounts){
+    if(amount!==null){
+      slider.value=cur[key]>0?String(sim[key]/cur[key]*100):'100';
+    }
+    if(input!==document.activeElement){
+      input.value=Math.round(sim[key]).toLocaleString('ja-JP');
+    }
+    const ratio=amount===null?`${slider.value}%`:pct(cur[key]>0?sim[key]/cur[key]:NaN);
+    el(slider.id+'Label').textContent=`${unitMoney(sim[key])}（${ratio}）`;
+  }
 
-  el('simScenarioBadge').textContent=buildScenarioBadgeText();
-  el('simActiveConditions').textContent=`現在のシミュレーション条件：${buildScenarioConditionText()}`;
-  el('simSalesPctLabel').textContent=`${unitMoney(sim.sales)}（${salesPct.toFixed(0)}%）`;
-  el('simVariableRateLabel').textContent=`${varRate.toFixed(1)}%`;
-  el('simLaborPctLabel').textContent=`${unitMoney(sim.labor)}（${laborPct.toFixed(0)}%）`;
-  el('simOtherPctLabel').textContent=`${unitMoney(sim.otherFixed)}（${otherPct.toFixed(0)}%）`;
+  const byAmount=variableMode.value==='amount';
+  variableSlider.disabled=byAmount;
+  variableInput.readOnly=!byAmount;
+  if((byAmount || variableRate!==null) && Number.isFinite(sim.variableRate)){
+    variableSlider.value=String(sim.variableRate*100);
+  }
+  if(!byAmount || variableInput!==document.activeElement){
+    variableInput.value=Math.round(sim.variable).toLocaleString('ja-JP');
+  }
+  el('simVariableRateLabel').textContent=pct(sim.variableRate);
+
+  const conditionText=buildScenarioConditionText(cur,sim);
+  el('simScenarioBadge').textContent=`もしも条件：${conditionText}`;
+  el('simActiveConditions').textContent=`現在のシミュレーション条件：${conditionText}`;
 
   el('cmpSalesNow').textContent=unitMoney(cur.sales); el('cmpSalesSim').textContent=unitMoney(sim.sales); setDelta('cmpSalesDiff',sim.sales-cur.sales,'sales');
   el('cmpVariableNow').textContent=unitMoney(cur.variable); el('cmpVariableSim').textContent=unitMoney(sim.variable); setDelta('cmpVariableDiff',sim.variable-cur.variable,'variable_cost');
@@ -527,7 +547,6 @@ function updateAll(){
   el('cmpSafetyNow').textContent=pct(cur.safetyRate); el('cmpSafetySim').textContent=pct(sim.safetyRate); setPctDelta('cmpSafetyDiff',sim.safetyRate-cur.safetyRate,'benefit');
 
   const note=el('simComment');
-  const conditionText=buildScenarioConditionText();
 
   if(sim.profit>=0){
     note.classList.remove('bad');
@@ -547,20 +566,15 @@ function updateAll(){
   }
 }
 
-function resetSim(){
+function resetSim(salesPct=100){
   const cur=currentData();
-  el('simSalesPct').value='100';
-  el('simVariableRate').value=cur.sales>0?String((cur.variable/cur.sales*100).toFixed(1)):'0';
-  el('simLaborPct').value='100';
-  el('simOtherPct').value='100';
-  updateAll();
-}
-function setSales110(){
-  const cur=currentData();
-  el('simSalesPct').value='110';
-  el('simVariableRate').value=cur.sales>0?String((cur.variable/cur.sales*100).toFixed(1)):'0';
-  el('simLaborPct').value='100';
-  el('simOtherPct').value='100';
+  for(const field of scenarioAmounts){
+    field.amount=null;
+    field.slider.value=field.key==='sales'?String(salesPct):'100';
+  }
+  variableMode.value='rate';
+  variableRate=null;
+  variableSlider.value=cur.sales>0?String((cur.variableRate*100).toFixed(1)):'0';
   updateAll();
 }
 
@@ -574,13 +588,45 @@ function setSales110(){
     updateAll();scheduleSave();
   });
 });
-['simSalesPct','simVariableRate','simLaborPct','simOtherPct'].forEach(id=>el(id).addEventListener('input',updateAll));
-el('resetSimBtn').addEventListener('click',resetSim);
+for(const field of scenarioAmounts){
+  field.slider.addEventListener('input',()=>{
+    field.amount=null;
+    updateAll();
+  });
+  field.input.addEventListener('input',()=>{
+    field.amount=parseMoney(field.input.value);
+    updateAll();
+  });
+  field.input.addEventListener('blur',()=>{
+    field.input.value=Math.round(scenarioData(currentData())[field.key]).toLocaleString('ja-JP');
+  });
+}
+variableSlider.addEventListener('input',()=>{
+  variableRate=null;
+  updateAll();
+});
+variableInput.addEventListener('input',()=>{
+  variableAmount=parseMoney(variableInput.value);
+  updateAll();
+});
+variableInput.addEventListener('blur',()=>{
+  variableInput.value=Math.round(scenarioData(currentData()).variable).toLocaleString('ja-JP');
+});
+variableMode.addEventListener('change',()=>{
+  const sim=scenarioData(currentData());
+  if(variableMode.value==='amount'){
+    variableAmount=sim.sales*(variableRate??Number(variableSlider.value)/100);
+  }else{
+    variableRate=sim.sales>0?variableAmount/sim.sales:variableRate;
+  }
+  updateAll();
+});
+el('resetSimBtn').addEventListener('click',()=>resetSim());
 
 el('sampleBtn').addEventListener('click',()=>{
   el('company').value='株式会社サンプル';el('period').value='2026年度';el('unit').value='yen';
   el('sales').value='100000000';el('variableCost').value='60000000';el('laborCost').value='20000000';el('otherFixed').value='15000000';
-  setSales110();scheduleSave();
+  resetSim(110);scheduleSave();
 });
 el('clearBtn').addEventListener('click',()=>{
   if(!confirm('本当に入力内容をすべて削除しますか？'))return;
@@ -590,7 +636,7 @@ el('clearBtn').addEventListener('click',()=>{
 
 el('runtimeStatus').textContent='✓ JavaScript動作中';el('runtimeStatus').classList.add('ok');
 loadState();
-setSales110();
+resetSim(110);
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
