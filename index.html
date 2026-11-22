@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#1d4ed8" />
 <link rel="manifest" href="manifest.webmanifest" />
-<title>STRAC経営分析 Prototype 02-2.5</title>
+<title>STRAC経営分析 Prototype 02-2.5a</title>
 <style>
 :root{
   --bg:#f4f6f8; --panel:#fff; --text:#172033; --muted:#6b7280; --line:#d7dce3;
@@ -67,9 +67,13 @@ button{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:
 .loss-box{background:var(--red);border:2px solid #ef4444;border-radius:12px;padding:10px;color:#991b1b;font-weight:900}
 .loss-box .loss-main{font-size:24px;margin:3px 0}
 .chart-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
-.metric{border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc}
+.metric{border:1px solid var(--line);border-radius:12px;padding:10px;background:#f8fafc;container-type:inline-size}
 .metric .k{font-size:11px;color:var(--muted);font-weight:800}
-.metric .v{font-size:16px;font-weight:900;margin-top:4px}
+.metric .v{font-size:16px;font-weight:900;margin-top:4px;overflow-wrap:anywhere}
+.metric.money .metric-number{font-size:16px}
+@container (max-width:108px){
+  .metric.money .metric-number{font-size:14px}
+}
 .sim-panel{padding:16px;margin-top:14px}
 .sim-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
 .sim-grid{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:14px}
@@ -89,6 +93,10 @@ input[type="range"]{width:100%;padding:0;border:0}
 .delta-plus{color:#15803d;font-weight:900}.delta-minus{color:#b91c1c;font-weight:900}.delta-neutral{color:#475569;font-weight:900}
 .note{margin-top:12px;border-radius:14px;padding:13px 14px;font-size:14px;font-weight:800;background:#eff6ff;color:#1e3a8a}
 .note.bad{background:#fff1f2;color:#9f1239}
+@media(min-width:1181px) and (max-width:1366px){
+  .chart-metrics{grid-template-columns:.88fr 1.12fr 1.28fr .88fr;gap:6px}
+  .chart-metrics .metric{padding-left:5px;padding-right:5px}
+}
 @media(max-width:1180px){
   .main-grid{grid-template-columns:1fr}.input-panel{position:static}
 }
@@ -107,7 +115,7 @@ input[type="range"]{width:100%;padding:0;border:0}
 
 <header>
   <div>
-    <h1>STRAC経営分析 Prototype 02-2.5</h1>
+    <h1>STRAC経営分析 Prototype 02-2.5a</h1>
     <div class="subtitle">現在と「もしも」のSTRAC図を比較し、比較表の増減を経営上の改善／悪化で色分けします。</div>
   </div>
   <div class="status-row">
@@ -156,8 +164,8 @@ input[type="range"]{width:100%;padding:0;border:0}
       </div>
       <div class="chart-metrics">
         <div class="metric"><div class="k">変動費率</div><div class="v" id="curVariableRate"></div></div>
-        <div class="metric"><div class="k">固定費合計</div><div class="v" id="curFixedTotal"></div></div>
-        <div class="metric"><div class="k">損益分岐点売上高</div><div class="v" id="curBreakEven"></div></div>
+        <div class="metric money"><div class="k">固定費合計</div><div class="v" id="curFixedTotal"></div></div>
+        <div class="metric money"><div class="k">損益分岐点売上高</div><div class="v" id="curBreakEven"></div></div>
         <div class="metric"><div class="k">安全余裕率</div><div class="v" id="curSafetyRate"></div></div>
       </div>
     </section>
@@ -183,8 +191,8 @@ input[type="range"]{width:100%;padding:0;border:0}
       </div>
       <div class="chart-metrics">
         <div class="metric"><div class="k">変動費率</div><div class="v" id="simVariableRateMetric"></div></div>
-        <div class="metric"><div class="k">固定費合計</div><div class="v" id="simFixedTotal"></div></div>
-        <div class="metric"><div class="k">損益分岐点売上高</div><div class="v" id="simBreakEven"></div></div>
+        <div class="metric money"><div class="k">固定費合計</div><div class="v" id="simFixedTotal"></div></div>
+        <div class="metric money"><div class="k">損益分岐点売上高</div><div class="v" id="simBreakEven"></div></div>
         <div class="metric"><div class="k">安全余裕率</div><div class="v" id="simSafetyRate"></div></div>
       </div>
     </section>
@@ -300,6 +308,12 @@ function unitMoney(n){
   return `${sign}${Math.round(a).toLocaleString('ja-JP')}円`;
 }
 function pct(v){return Number.isFinite(v)?`${(v*100).toFixed(1)}%`:'—';}
+function metricMoneyHTML(n){
+  const text=unitMoney(n);
+  const m=text.match(/^(.*?)(百万円|万円|円)$/);
+  if(!m)return text;
+  return `<span class="metric-number">${m[1]}</span><wbr><span class="metric-unit">${m[2]}</span>`;
+}
 function helper(n){return `${exactYen(n)} ＝ ${jpMoney(n)}`;}
 
 function storageAvailable(){
@@ -378,8 +392,8 @@ function renderChart(prefix,d){
   }
 
   el(prefix+'VariableRate').textContent=pct(d.variableRate);
-  el(prefix+'FixedTotal').textContent=unitMoney(d.fixed);
-  el(prefix+'BreakEven').textContent=Number.isFinite(d.breakEven)?unitMoney(d.breakEven):'—';
+  el(prefix+'FixedTotal').innerHTML=metricMoneyHTML(d.fixed);
+  el(prefix+'BreakEven').innerHTML=Number.isFinite(d.breakEven)?metricMoneyHTML(d.breakEven):'—';
   el(prefix+'SafetyRate').textContent=pct(d.safetyRate);
 }
 
