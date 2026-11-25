@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#1d4ed8" />
 <link rel="manifest" href="manifest.webmanifest" />
-<title>STRAC経営分析 Prototype 02-2.5d</title>
+<title>STRAC経営分析 Prototype 02-2.5e</title>
 <style>
 :root{
   --bg:#f4f6f8; --panel:#fff; --text:#172033; --muted:#6b7280; --line:#d7dce3;
@@ -130,7 +130,7 @@ button{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:
 
 <header>
   <div>
-    <h1>STRAC経営分析 Prototype 02-2.5d</h1>
+    <h1>STRAC経営分析 Prototype 02-2.5e</h1>
     <div class="subtitle">現在と「もしも」のSTRAC図を比較し、比較表の増減を経営上の改善／悪化で色分けします。</div>
   </div>
   <div class="status-row">
@@ -530,6 +530,24 @@ function buildScenarioConditionText(cur,sim){
   return conditions.length ? conditions.join('・') : '現在値と同じ';
 }
 
+let activeRangeAnchor=null;
+
+function beginRangeAnchor(range){
+  const rect=range.getBoundingClientRect();
+  activeRangeAnchor={range,top:rect.top};
+}
+
+function restoreRangeAnchor(){
+  if(!activeRangeAnchor)return;
+  const {range,top}=activeRangeAnchor;
+  if(!document.body.contains(range))return;
+  const now=range.getBoundingClientRect().top;
+  const delta=now-top;
+  if(Math.abs(delta)>0.5){
+    window.scrollBy(0,delta);
+  }
+}
+
 function updateAll(){
   const cur=currentData();
   const sim=scenarioData(cur);
@@ -576,6 +594,8 @@ function updateAll(){
   el('cmpSafetyNow').textContent=pct(cur.safetyRate); el('cmpSafetySim').textContent=pct(sim.safetyRate); setPctDelta('cmpSafetyDiff',sim.safetyRate-cur.safetyRate,'benefit');
 
   const note=el('simComment');
+
+  restoreRangeAnchor();
 
   if(sim.profit>=0){
     note.classList.remove('bad');
@@ -645,6 +665,14 @@ function setRangeFromTouch(range,touch,zone){
   range.dispatchEvent(new Event('input',{bubbles:true}));
 }
 
+document.querySelectorAll('.range-touch-zone input[type="range"]').forEach(range=>{
+  range.addEventListener('pointerdown',e=>{
+    if(e.pointerType!=='touch') beginRangeAnchor(range);
+  });
+  range.addEventListener('pointerup',()=>{activeRangeAnchor=null;});
+  range.addEventListener('pointercancel',()=>{activeRangeAnchor=null;});
+});
+
 document.querySelectorAll('.range-touch-zone').forEach(zone=>{
   const range=zone.querySelector('input[type="range"]');
   if(!range)return;
@@ -653,11 +681,20 @@ document.querySelectorAll('.range-touch-zone').forEach(zone=>{
     if(range.disabled||e.touches.length!==1)return;
     e.preventDefault();
     e.stopPropagation();
+    if(!activeRangeAnchor || activeRangeAnchor.range!==range){
+      beginRangeAnchor(range);
+    }
     setRangeFromTouch(range,e.touches[0],zone);
+  };
+
+  const endTouch=()=>{
+    activeRangeAnchor=null;
   };
 
   zone.addEventListener('touchstart',handleTouch,{passive:false});
   zone.addEventListener('touchmove',handleTouch,{passive:false});
+  zone.addEventListener('touchend',endTouch,{passive:true});
+  zone.addEventListener('touchcancel',endTouch,{passive:true});
 });
 
 for(const field of scenarioAmounts){
