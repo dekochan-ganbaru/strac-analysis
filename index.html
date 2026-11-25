@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#1d4ed8" />
 <link rel="manifest" href="manifest.webmanifest" />
-<title>STRAC経営分析 Prototype 02-2.5h</title>
+<title>STRAC経営分析 Prototype 02-2.6</title>
 <style>
 :root{
   --bg:#f4f6f8; --panel:#fff; --text:#172033; --muted:#6b7280; --line:#d7dce3;
@@ -18,7 +18,6 @@ body{
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
   background:var(--bg); color:var(--text);
-  overflow-anchor:none;
 }
 .app{max-width:1560px;margin:0 auto;padding:16px}
 header{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px}
@@ -75,7 +74,7 @@ button{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:
 @container (max-width:108px){
   .metric.money .metric-number{font-size:14px}
 }
-.sim-panel{padding:16px;margin-top:14px;overflow-anchor:none}
+.sim-panel{padding:16px;margin-top:14px;}
 .sim-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
 .sim-grid{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:14px}
 .sim-card{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff}
@@ -85,7 +84,6 @@ button{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:
 .sim-row-name{font-size:13px;font-weight:900}.sim-row-value{font-size:16px;font-weight:900}
 .range-touch-zone{
   position:relative;
-  overflow-anchor:none;
   padding:12px 0;
   margin:-8px 0;
   touch-action:none;
@@ -132,7 +130,7 @@ button{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:
 
 <header>
   <div>
-    <h1>STRAC経営分析 Prototype 02-2.5h</h1>
+    <h1>STRAC経営分析 Prototype 02-2.6</h1>
     <div class="subtitle">現在と「もしも」のSTRAC図を比較し、比較表の増減を経営上の改善／悪化で色分けします。</div>
   </div>
   <div class="status-row">
@@ -668,6 +666,24 @@ function setRangeFromTouch(range,touch,zone){
   range.dispatchEvent(new Event('input',{bubbles:true}));
 }
 
+const isCoarsePointer=window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+
+function previewScenarioSlider(field){
+  const cur=currentData();
+  const amount=cur[field.key]*(Number(field.slider.value)/100);
+  field.input.value=Math.round(amount).toLocaleString('ja-JP');
+  el(field.slider.id+'Label').textContent=`${unitMoney(amount)}（${field.slider.value}%）`;
+}
+
+function previewVariableSlider(){
+  const cur=currentData();
+  const salesField=scenarioAmounts.find(f=>f.key==='sales');
+  const simSales=salesField.amount??cur.sales*(Number(salesField.slider.value)/100);
+  const amount=simSales*(Number(variableSlider.value)/100);
+  variableInput.value=Math.round(amount).toLocaleString('ja-JP');
+  el('simVariableRateLabel').textContent=`${Number(variableSlider.value).toFixed(1)}%`;
+}
+
 document.querySelectorAll('.range-touch-zone').forEach(zone=>{
   const range=zone.querySelector('input[type="range"]');
   if(!range)return;
@@ -696,6 +712,9 @@ document.querySelectorAll('.range-touch-zone').forEach(zone=>{
     if(zone.hasPointerCapture && zone.hasPointerCapture(e.pointerId)){
       try{ zone.releasePointerCapture(e.pointerId); }catch(_){}
     }
+    if(isCoarsePointer){
+      range.dispatchEvent(new Event('change',{bubbles:true}));
+    }
   };
 
   zone.addEventListener('pointerup',endPointer);
@@ -705,7 +724,14 @@ document.querySelectorAll('.range-touch-zone').forEach(zone=>{
 for(const field of scenarioAmounts){
   field.slider.addEventListener('input',()=>{
     field.amount=null;
-    updateAll();
+    if(isCoarsePointer){
+      previewScenarioSlider(field);
+    }else{
+      updateAll();
+    }
+  });
+  field.slider.addEventListener('change',()=>{
+    if(isCoarsePointer) updateAll();
   });
   field.input.addEventListener('input',()=>{
     field.amount=parseMoney(field.input.value);
@@ -717,7 +743,14 @@ for(const field of scenarioAmounts){
 }
 variableSlider.addEventListener('input',()=>{
   variableRate=null;
-  updateAll();
+  if(isCoarsePointer){
+    previewVariableSlider();
+  }else{
+    updateAll();
+  }
+});
+variableSlider.addEventListener('change',()=>{
+  if(isCoarsePointer) updateAll();
 });
 variableInput.addEventListener('input',()=>{
   variableAmount=parseMoney(variableInput.value);
