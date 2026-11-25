@@ -1,4 +1,12 @@
-# STRAC経営分析 Prototype 02-2.5g
+# STRAC経営分析 Prototype 02-2.5h
+
+## 02-2.5hのスマホ操作修正
+
+- iPhone / iOS Safariでスライダーを触った瞬間に画面が上下へ補正される現象に対し、`overflow-anchor:none` を追加しました。
+- body、シミュレーター領域、スライダー操作領域でブラウザのスクロールアンカーによる自動位置補正を抑えます。
+- 02-2.5gのPointer Events / setPointerCapture() は維持しています。
+- 計算ロジック、STRAC図、直接金額入力には変更を加えていません。
+- Service Workerのキャッシュ名を `strac-02-2-5h-v1` に更新しました。
 
 ## 02-2.5gのスマホ操作修正
 
