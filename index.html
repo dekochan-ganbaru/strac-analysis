@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#1d4ed8" />
 <link rel="manifest" href="manifest.webmanifest" />
-<title>STRAC経営分析 Prototype 02-2.5f</title>
+<title>STRAC経営分析 Prototype 02-2.5g</title>
 <style>
 :root{
   --bg:#f4f6f8; --panel:#fff; --text:#172033; --muted:#6b7280; --line:#d7dce3;
@@ -130,7 +130,7 @@ button{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:
 
 <header>
   <div>
-    <h1>STRAC経営分析 Prototype 02-2.5f</h1>
+    <h1>STRAC経営分析 Prototype 02-2.5g</h1>
     <div class="subtitle">現在と「もしも」のSTRAC図を比較し、比較表の増減を経営上の改善／悪化で色分けします。</div>
   </div>
   <div class="status-row">
@@ -530,31 +530,25 @@ function buildScenarioConditionText(cur,sim){
   return conditions.length ? conditions.join('・') : '現在値と同じ';
 }
 
-let lockedScrollY=0;
-let sliderScrollLocked=false;
+function setRangeFromPointer(range,clientX){
+  if(range.disabled)return;
+  const rect=range.getBoundingClientRect();
+  if(rect.width<=0)return;
 
-function lockPageForSlider(){
-  if(sliderScrollLocked)return;
-  lockedScrollY=window.scrollY||window.pageYOffset||0;
-  sliderScrollLocked=true;
-  document.body.style.position='fixed';
-  document.body.style.top=`-${lockedScrollY}px`;
-  document.body.style.left='0';
-  document.body.style.right='0';
-  document.body.style.width='100%';
-  document.body.style.overflow='hidden';
-}
+  const min=Number(range.min||0);
+  const max=Number(range.max||100);
+  const step=Number(range.step||1);
+  const ratio=Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
 
-function unlockPageForSlider(){
-  if(!sliderScrollLocked)return;
-  document.body.style.position='';
-  document.body.style.top='';
-  document.body.style.left='';
-  document.body.style.right='';
-  document.body.style.width='';
-  document.body.style.overflow='';
-  sliderScrollLocked=false;
-  window.scrollTo(0,lockedScrollY);
+  let value=min+ratio*(max-min);
+  if(Number.isFinite(step)&&step>0){
+    value=Math.round((value-min)/step)*step+min;
+    const decimals=(String(step).split('.')[1]||'').length;
+    value=Number(value.toFixed(decimals));
+  }
+
+  range.value=String(Math.max(min,Math.min(max,value)));
+  range.dispatchEvent(new Event('input',{bubbles:true}));
 }
 
 function updateAll(){
@@ -676,22 +670,34 @@ document.querySelectorAll('.range-touch-zone').forEach(zone=>{
   const range=zone.querySelector('input[type="range"]');
   if(!range)return;
 
-  const handleTouch=e=>{
-    if(range.disabled||e.touches.length!==1)return;
-    lockPageForSlider();
+  zone.addEventListener('pointerdown',e=>{
+    if(range.disabled)return;
+    if(e.pointerType==='mouse' && e.button!==0)return;
+
     e.preventDefault();
     e.stopPropagation();
-    setRangeFromTouch(range,e.touches[0],zone);
+
+    try{ zone.setPointerCapture(e.pointerId); }catch(_){}
+    setRangeFromPointer(range,e.clientX);
+  });
+
+  zone.addEventListener('pointermove',e=>{
+    if(range.disabled)return;
+    if(!zone.hasPointerCapture || !zone.hasPointerCapture(e.pointerId))return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    setRangeFromPointer(range,e.clientX);
+  });
+
+  const endPointer=e=>{
+    if(zone.hasPointerCapture && zone.hasPointerCapture(e.pointerId)){
+      try{ zone.releasePointerCapture(e.pointerId); }catch(_){}
+    }
   };
 
-  const endTouch=()=>{
-    unlockPageForSlider();
-  };
-
-  zone.addEventListener('touchstart',handleTouch,{passive:false});
-  zone.addEventListener('touchmove',handleTouch,{passive:false});
-  zone.addEventListener('touchend',endTouch,{passive:true});
-  zone.addEventListener('touchcancel',endTouch,{passive:true});
+  zone.addEventListener('pointerup',endPointer);
+  zone.addEventListener('pointercancel',endPointer);
 });
 
 for(const field of scenarioAmounts){
