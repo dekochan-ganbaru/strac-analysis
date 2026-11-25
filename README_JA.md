@@ -1,4 +1,14 @@
-# STRAC経営分析 Prototype 02-2.5f
+# STRAC経営分析 Prototype 02-2.5g
+
+## 02-2.5gのスマホ操作修正
+
+- 02-2.5fで使っていた body の fixed 固定を廃止し、触れた瞬間に画面が上へジャンプする問題を避けます。
+- スライダー周辺の広い操作領域で Pointer Events を使い、pointerdown 時に setPointerCapture() で指を捕まえます。
+- 指が少し上下へずれても、pointermove は同じスライダー操作として継続します。
+- 操作中は preventDefault() でページスクロールを抑え、指の横方向位置からスライダー値を更新します。
+- ページ本体の position や scrollY は変更しないため、初動の画面ジャンプを発生させない設計です。
+- 計算ロジック、STRAC図、直接金額入力には変更を加えていません。
+- Service Workerのキャッシュ名を `strac-02-2-5g-v1` に更新しました。
 
 ## 02-2.5fのスマホ操作修正
 
