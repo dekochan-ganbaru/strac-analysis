@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#1d4ed8" />
 <link rel="manifest" href="manifest.webmanifest" />
-<title>STRAC経営分析 Prototype 02-2.5c</title>
+<title>STRAC経営分析 Prototype 02-2.5d</title>
 <style>
 :root{
   --bg:#f4f6f8; --panel:#fff; --text:#172033; --muted:#6b7280; --line:#d7dce3;
@@ -82,7 +82,22 @@ button{border:0;border-radius:12px;padding:12px 14px;font-size:15px;font-weight:
 .sim-row{margin-bottom:16px}
 .sim-row-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;align-items:center}
 .sim-row-name{font-size:13px;font-weight:900}.sim-row-value{font-size:16px;font-weight:900}
-input[type="range"]{width:100%;padding:0;border:0;touch-action:none;-webkit-user-select:none;user-select:none}
+.range-touch-zone{
+  position:relative;
+  padding:12px 0;
+  margin:-8px 0;
+  touch-action:none;
+  -webkit-user-select:none;
+  user-select:none;
+}
+.range-touch-zone input[type="range"]{
+  width:100%;
+  padding:0;
+  border:0;
+  touch-action:none;
+  -webkit-user-select:none;
+  user-select:none;
+}
 .sim-money{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:13px}
 .sim-money input{flex:1;min-width:0}
 .sim-actions{display:flex;gap:8px;flex-wrap:wrap}
@@ -115,7 +130,7 @@ input[type="range"]{width:100%;padding:0;border:0;touch-action:none;-webkit-user
 
 <header>
   <div>
-    <h1>STRAC経営分析 Prototype 02-2.5c</h1>
+    <h1>STRAC経営分析 Prototype 02-2.5d</h1>
     <div class="subtitle">現在と「もしも」のSTRAC図を比較し、比較表の増減を経営上の改善／悪化で色分けします。</div>
   </div>
   <div class="status-row">
@@ -217,7 +232,7 @@ input[type="range"]{width:100%;padding:0;border:0;touch-action:none;-webkit-user
 
       <div class="sim-row">
         <div class="sim-row-top"><span class="sim-row-name">売上高</span><span class="sim-row-value" id="simSalesPctLabel"></span></div>
-        <input type="range" id="simSalesPct" aria-label="現在売上高に対する割合" min="50" max="150" step="1" value="110">
+        <div class="range-touch-zone" data-range-id="simSalesPct"><input type="range" id="simSalesPct" aria-label="現在売上高に対する割合" min="50" max="150" step="1" value="110"></div>
         <div class="helper">現在売上高の50〜150%</div>
         <label class="sim-money">金額 <input id="simSalesAmount" type="text" inputmode="decimal" aria-label="もしもの売上高の金額"> 円</label>
       </div>
@@ -228,19 +243,19 @@ input[type="range"]{width:100%;padding:0;border:0;touch-action:none;-webkit-user
           <option value="rate">比率で指定</option>
           <option value="amount">金額で指定</option>
         </select>
-        <input type="range" id="simVariableRate" aria-label="変動費率" min="0" max="100" step="0.1" value="60">
+        <div class="range-touch-zone" data-range-id="simVariableRate"><input type="range" id="simVariableRate" aria-label="変動費率" min="0" max="100" step="0.1" value="60"></div>
         <label class="sim-money">金額 <input id="simVariableAmount" type="text" inputmode="decimal" aria-label="もしもの変動費の金額" readonly> 円</label>
       </div>
 
       <div class="sim-row">
         <div class="sim-row-top"><span class="sim-row-name">人件費</span><span class="sim-row-value" id="simLaborPctLabel"></span></div>
-        <input type="range" id="simLaborPct" aria-label="現在人件費に対する割合" min="50" max="150" step="1" value="100">
+        <div class="range-touch-zone" data-range-id="simLaborPct"><input type="range" id="simLaborPct" aria-label="現在人件費に対する割合" min="50" max="150" step="1" value="100"></div>
         <label class="sim-money">金額 <input id="simLaborAmount" type="text" inputmode="decimal" aria-label="もしもの人件費の金額"> 円</label>
       </div>
 
       <div class="sim-row">
         <div class="sim-row-top"><span class="sim-row-name">その他固定費</span><span class="sim-row-value" id="simOtherPctLabel"></span></div>
-        <input type="range" id="simOtherPct" aria-label="現在その他固定費に対する割合" min="50" max="150" step="1" value="100">
+        <div class="range-touch-zone" data-range-id="simOtherPct"><input type="range" id="simOtherPct" aria-label="現在その他固定費に対する割合" min="50" max="150" step="1" value="100"></div>
         <label class="sim-money">金額 <input id="simOtherAmount" type="text" inputmode="decimal" aria-label="もしものその他固定費の金額"> 円</label>
       </div>
       <div class="helper">スライダーで指定できる範囲外の金額も入力できます。</div>
@@ -602,38 +617,47 @@ function resetSim(salesPct=100){
     updateAll();scheduleSave();
   });
 });
-// iOS Safari: keep the page fixed while dragging range sliders.
-// Native touch scrolling can win even with touch-action:none, so slider value is
-// updated explicitly from the finger's horizontal position.
-function setRangeFromTouch(range,touch){
+// iOS Safari: use a larger invisible touch zone around each slider.
+// This prevents the page from escaping vertically even when the finger
+// drifts slightly above or below the visible range control.
+function setRangeFromTouch(range,touch,zone){
   if(range.disabled)return;
   const rect=range.getBoundingClientRect();
-  if(rect.width<=0)return;
+  const zoneRect=zone.getBoundingClientRect();
+  if(rect.width<=0||zoneRect.width<=0)return;
+
   const min=Number(range.min||0);
   const max=Number(range.max||100);
   const step=Number(range.step||1);
-  const ratio=Math.max(0,Math.min(1,(touch.clientX-rect.left)/rect.width));
+
+  const left=rect.left;
+  const width=rect.width;
+  const ratio=Math.max(0,Math.min(1,(touch.clientX-left)/width));
+
   let value=min+ratio*(max-min);
   if(Number.isFinite(step)&&step>0){
     value=Math.round((value-min)/step)*step+min;
     const decimals=(String(step).split('.')[1]||'').length;
     value=Number(value.toFixed(decimals));
   }
+
   range.value=String(Math.max(min,Math.min(max,value)));
   range.dispatchEvent(new Event('input',{bubbles:true}));
 }
 
-document.querySelectorAll('input[type="range"]').forEach(range=>{
-  range.addEventListener('touchstart',e=>{
+document.querySelectorAll('.range-touch-zone').forEach(zone=>{
+  const range=zone.querySelector('input[type="range"]');
+  if(!range)return;
+
+  const handleTouch=e=>{
     if(range.disabled||e.touches.length!==1)return;
     e.preventDefault();
-    setRangeFromTouch(range,e.touches[0]);
-  },{passive:false});
-  range.addEventListener('touchmove',e=>{
-    if(range.disabled||e.touches.length!==1)return;
-    e.preventDefault();
-    setRangeFromTouch(range,e.touches[0]);
-  },{passive:false});
+    e.stopPropagation();
+    setRangeFromTouch(range,e.touches[0],zone);
+  };
+
+  zone.addEventListener('touchstart',handleTouch,{passive:false});
+  zone.addEventListener('touchmove',handleTouch,{passive:false});
 });
 
 for(const field of scenarioAmounts){
