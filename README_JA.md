@@ -1,4 +1,14 @@
-# STRAC経営分析 Prototype 02-2.5h
+# STRAC経営分析 Prototype 02-2.6
+
+## 02-2.6のスマホ操作改善
+
+- スマホなど coarse pointer 端末では、スライダーのドラッグ中に `updateAll()` を連続実行しない方式へ変更しました。
+- ドラッグ中は対象スライダーの金額・比率表示だけを軽量更新します。
+- 指を離した `change` / `pointerup` のタイミングでSTRAC図・比較表・説明文を一度だけ再計算します。
+- PCなど fine pointer 端末では、従来どおりリアルタイム再描画を維持します。
+- 02-2.5gのPointer Captureは維持し、02-2.5hで試した `overflow-anchor:none` は外しました。
+- 計算ロジックと直接金額入力の仕様は変更していません。
+- Service Workerのキャッシュ名を `strac-02-2-6-v1` に更新しました。
 
 ## 02-2.5hのスマホ操作修正
 
